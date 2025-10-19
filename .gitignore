@@ -1,0 +1,57 @@
+# JUCE & C++
+Builds/
+JuceLibraryCode/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+
+# Visual Studio
+.vs/
+*.VC.db
+*.VC.VC.opendb
+ipch/
+*.aps
+*.suo
+*.user
+*.ncb
+Browse.VC.db
+
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
