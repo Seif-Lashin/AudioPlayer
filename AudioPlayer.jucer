@@ -4,6 +4,14 @@
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1">
   <MAINGROUP id="t9UaeB" name="AudioPlayer">
     <GROUP id="{DD449CBC-910E-0AEB-CA94-D2DD9636D007}" name="Source">
+      <GROUP id="{B646E16E-BF63-3A4A-D14F-278F354B31AA}" name="gui">
+        <FILE id="ftnvUw" name="PlayerGUI.cpp" compile="1" resource="0" file="Source/PlayerGUI.cpp"/>
+        <FILE id="MB6Dpl" name="PlayerGUI.h" compile="0" resource="0" file="Source/PlayerGUI.h"/>
+      </GROUP>
+      <GROUP id="{05DB1AF3-0781-C6D4-F600-A316489E6CFF}" name="backend">
+        <FILE id="fpyIY3" name="PlayerAudio.cpp" compile="1" resource="0" file="Source/PlayerAudio.cpp"/>
+        <FILE id="xeT0Cl" name="PlayerAudio.h" compile="0" resource="0" file="Source/PlayerAudio.h"/>
+      </GROUP>
       <FILE id="sHAYap" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
       <FILE id="VJCqX4" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
       <FILE id="IFOovM" name="MainComponent.cpp" compile="1" resource="0"
