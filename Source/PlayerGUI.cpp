@@ -77,7 +77,7 @@ PlayerGUI::~PlayerGUI()
 
 void PlayerGUI::paint(juce::Graphics& g)
 {
-    g.fillAll(juce::Colours::hotpink);
+    g.fillAll(juce::Colours::darkgrey);
 }
 
 void PlayerGUI::resized()
@@ -89,8 +89,8 @@ void PlayerGUI::resized()
 	repeatButton.setBounds(340, y, 80, 40);
     /*prevButton.setBounds(340, y, 80, 40);
     nextButton.setBounds(440, y, 80, 40);*/
-    jumpForward.setBounds(440, y, 80, 40);
-    jumpBackward.setBounds(540, y, 80, 40);
+    jumpBackward.setBounds(440, y, 80, 40);
+    jumpForward.setBounds(540, y, 80, 40);
     
 
     trackSlider.setBounds(20, 70, getWidth() - 40, 20);
