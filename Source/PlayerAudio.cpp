@@ -65,6 +65,14 @@ void PlayerAudio::setPosition(double pos) {
     transportSource.setPosition(pos);
 }
 
+void PlayerAudio::Jumptostart() {
+   setPosition(0);
+}
+
+void PlayerAudio::Jumptoend() {
+    setPosition(getLength());
+}
+
 void PlayerAudio::nxt10(double pos) {
     double len = transportSource.getLengthInSeconds(); // is the total length of the size file.
     double nxt = pos + 10.0;
