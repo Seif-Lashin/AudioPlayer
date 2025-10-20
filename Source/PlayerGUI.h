@@ -10,7 +10,7 @@ class PlayerGUI : public juce::AudioAppComponent,
 private:
     PlayerAudio playerAudio;
     juce::TextButton loadButton{ "Load File" };
-    juce::TextButton restartButton{ "Play" };
+    juce::TextButton restartButton{ "Reset" };
     juce::TextButton stopButton{ "Stop" };
 	  juce::ToggleButton repeatButton{ "Repeat" };
     juce::TextButton jumpForward{ "+10s" };
