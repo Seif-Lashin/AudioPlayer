@@ -3,20 +3,71 @@
 PlayerGUI::PlayerGUI()
 {
     // Add buttons
-    for (auto* btn : { &loadButton, &restartButton , &stopButton, &jumpForward, &jumpBackward})
+    for (auto* btn : { &loadButton, &restartButton , &stopButton, &jumpForward, &jumpBackward})//text buttons
+    {
+        btn->addListener(this);
+        addAndMakeVisible(btn);
+    }
+
+    for (auto* btn : { &repeatButton }) //toggle buttons
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
     }
 
     // Volume slider
+    volumeSlider.textFromValueFunction = [](double value) {//cahnging value to percentage
+        double percent = value * 100;
+
+        return juce::String((int)percent) + "%";
+        };
+    volumeSlider.valueFromTextFunction = [](const juce::String& text) {//changing percentage to value
+        int percentagePos = text.indexOf("%");
+
+        if (percentagePos != -1) {
+            juce::String percent = text.substring(0, percentagePos);
+            return percent.getDoubleValue() / 100.0;
+        }
+
+        return text.getDoubleValue() / 100.0;
+        };
     volumeSlider.setRange(0.0, 1.0, 0.01);
     volumeSlider.setValue(0.5);
-    volumeSlider.addListener(this);
-    addAndMakeVisible(volumeSlider);
+
+    trackSlider.textFromValueFunction = [](double value) {// changing the value to a M:SS
+        int totalSeconds = (int)value;
+
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+
+        juce::String secondsStr = juce::String(seconds).paddedLeft('0', 2);
+
+        return juce::String(minutes) + ":" + secondsStr;
+        };
+    trackSlider.valueFromTextFunction = [](const juce::String& text) { //changing the M:SS to the value
+        int colonPos = text.indexOf(":");
+        if (colonPos != -1) {
+            juce::String minutesStr = text.substring(0, colonPos);
+            juce::String secondsStr = text.substring(colonPos + 1);
+
+            return minutesStr.getIntValue() * 60.0 + secondsStr.getIntValue();
+        }
+
+        return text.getDoubleValue();
+        };
+
+    trackSlider.setRange(0.0, 1.0);
+    trackSlider.setValue(0.0);
+    
+    for (auto* sli : { &volumeSlider, &trackSlider }) //sliders
+    {
+        sli->addListener(this);
+        addAndMakeVisible(sli);
+    }
 
     setSize(500, 250);
     setAudioChannels(0, 2);
+    startTimer(60); // this starts the timer, 60 updates per second
 }
 
 PlayerGUI::~PlayerGUI()
@@ -35,12 +86,14 @@ void PlayerGUI::resized()
     loadButton.setBounds(20, y, 100, 40);
     restartButton.setBounds(140, y, 80, 40);
     stopButton.setBounds(240, y, 80, 40);
+	repeatButton.setBounds(340, y, 80, 40);
     /*prevButton.setBounds(340, y, 80, 40);
     nextButton.setBounds(440, y, 80, 40);*/
     jumpForward.setBounds(440, y, 80, 40);
     jumpBackward.setBounds(540, y, 80, 40);
     
 
+    trackSlider.setBounds(20, 70, getWidth() - 40, 20);
     volumeSlider.setBounds(20, 100, getWidth() - 40, 30);
 }
 
@@ -78,11 +131,15 @@ void PlayerGUI::buttonClicked(juce::Button* button)
             {
                 auto file = fc.getResult();
                 playerAudio.loadFile(file);
+
+                //only set the range when loading a new file
+                trackSlider.setRange(0.0, playerAudio.getLength());
             });
     }
 
     if (button == &restartButton)
     {
+        playerAudio.setPosition(0.0);
         playerAudio.play();
     }
 
@@ -98,11 +155,25 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     if (button == &jumpBackward) {
         playerAudio.bck10(playerAudio.getPosition());
     }
-
+  
+    if (button == &repeatButton)
+    {
+		    playerAudio.repeatToggle(repeatButton.getToggleState());
+    }
 }
 
 void PlayerGUI::sliderValueChanged(juce::Slider* slider)
 {
     if (slider == &volumeSlider)
         playerAudio.setGain((float)slider->getValue());
+    if (slider == &trackSlider)
+        // this is the manual update
+        playerAudio.setPosition((float)slider->getValue());
+}
+
+void PlayerGUI::timerCallback() 
+{
+    if (!trackSlider.isMouseButtonDown())
+        // this automatically updates the position as the track goes on, also prevents fighting with user
+        trackSlider.setValue(playerAudio.getPosition(), juce::dontSendNotification); 
 }

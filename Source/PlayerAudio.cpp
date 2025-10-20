@@ -1,5 +1,5 @@
 ﻿#include "PlayerAudio.h"
-
+#include <cmath>
 PlayerAudio::PlayerAudio() {
     formatManager.registerBasicFormats();
 }
@@ -35,6 +35,9 @@ void PlayerAudio::loadFile(const juce::File& file) {
             // Create new reader source
             readerSource = std::make_unique<juce::AudioFormatReaderSource>(reader, true);
 
+            //repeat
+            readerSource->setLooping(islooping); //keep track of state when loading new track
+
             // Attach safely
             transportSource.setSource(readerSource.get(),
                 0,
@@ -45,13 +48,13 @@ void PlayerAudio::loadFile(const juce::File& file) {
     }
 }
 
+
 void PlayerAudio::play() {
     transportSource.start();
 }
 
 void PlayerAudio::stop() {
     transportSource.stop();
-	transportSource.setPosition(0.0);
 }
 
 void PlayerAudio::setGain(float gain) {
@@ -86,4 +89,22 @@ double PlayerAudio::getPosition() const {
 
 double PlayerAudio::getLength() const {
     return transportSource.getLengthInSeconds();
+}
+
+void PlayerAudio::repeatToggle(bool shouldRepeat) {
+
+    islooping = shouldRepeat; //changing the state of islooping depending on button
+    if (readerSource != nullptr) {
+        
+        if (!islooping) { //fixing bug (when closing repeat mid track the track closes)
+            auto cPos = getPosition();
+            auto length = getLength();
+
+            if (length > 0) {
+                setPosition(fmod(cPos, length));
+            }
+        }
+
+        readerSource->setLooping(islooping);
+    }
 }
