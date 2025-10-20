@@ -41,6 +41,21 @@ void PlayerGUI::resized()
     volumeSlider.setBounds(20, 100, getWidth() - 40, 30);
 }
 
+void PlayerGUI::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
+{
+    playerAudio.prepareToPlay(samplesPerBlockExpected, sampleRate);
+}
+
+void PlayerGUI::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
+{
+    playerAudio.getNextAudioBlock(bufferToFill);
+}
+
+void PlayerGUI::releaseResources()
+{
+    playerAudio.releaseResources();
+}
+
 void PlayerGUI::buttonClicked(juce::Button* button)
 {
     if (button == &loadButton)

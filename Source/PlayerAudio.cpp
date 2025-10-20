@@ -1,21 +1,13 @@
-﻿/*
-  ==============================================================================
-
-    PlayerAudio.cpp
-    Created: 20 Oct 2025 12:37:43am
-    Author:  Mohamed Lashin
-
-  ==============================================================================
-*/
-
-#include "PlayerAudio.h"
+﻿#include "PlayerAudio.h"
 
 PlayerAudio::PlayerAudio() {
     formatManager.registerBasicFormats();
 }
 
 PlayerAudio::~PlayerAudio() {
-    shutdownAudio();
+    transportSource.stop();
+    transportSource.setSource(nullptr);
+    readerSource.reset();
 }
 
 void PlayerAudio::prepareToPlay(int samplesPerBlockExpected, double sampleRate) {

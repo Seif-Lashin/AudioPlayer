@@ -8,8 +8,8 @@ class PlayerGUI : public juce::AudioAppComponent,
 {
 private:
     PlayerAudio playerAudio;
-    juce::TextButton loadButton{ "Load File" }; // Updated text for clarity
-    juce::TextButton restartButton{ "Play" };    // Changed "Restart" to "Play"
+    juce::TextButton loadButton{ "Load File" };
+    juce::TextButton restartButton{ "Play" };
     juce::TextButton stopButton{ "Stop" };
     juce::Slider volumeSlider;
     std::unique_ptr<juce::FileChooser> fileChooser;
@@ -22,13 +22,11 @@ public:
     void paint(juce::Graphics& g) override;
     void resized() override;
 
-    // GUI Callbacks
-    void buttonClicked(juce::Button* button) override;
-    void sliderValueChanged(juce::Slider* slider) override;
-
-    // --- FIX: Added Audio Callbacks ---
-    // These will be called by the system and we will pass them to our playerAudio object.
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override;
     void releaseResources() override;
+
+    void buttonClicked(juce::Button* button) override;
+    void sliderValueChanged(juce::Slider* slider) override;
+
 };
