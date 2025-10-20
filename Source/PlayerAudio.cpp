@@ -62,6 +62,24 @@ void PlayerAudio::setPosition(double pos) {
     transportSource.setPosition(pos);
 }
 
+void PlayerAudio::nxt10(double pos) {
+    double len = transportSource.getLengthInSeconds(); // is the total length of the size file.
+    double nxt = pos + 10.0;
+    if (len > 0.0) {
+        nxt = std::min(nxt, len);
+    }
+     transportSource.setPosition(nxt);
+}
+
+void PlayerAudio::bck10(double pos) {
+    double len = transportSource.getLengthInSeconds(); // is the total length of the size file.
+    double nxt = pos - 10.0;
+    if (len > 0.0) {
+        nxt = std::max(nxt, 0.0);
+    }
+    transportSource.setPosition(nxt);
+}
+
 double PlayerAudio::getPosition() const {
     return transportSource.getCurrentPosition();
 }

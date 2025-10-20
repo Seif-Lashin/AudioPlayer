@@ -12,6 +12,9 @@ private:
     juce::TextButton restartButton{ "Play" };
     juce::TextButton stopButton{ "Stop" };
     juce::Slider volumeSlider;
+    juce::TextButton jumpForward{ "+10s" };
+    juce::TextButton jumpBackward{ "-10s" };
+
     std::unique_ptr<juce::FileChooser> fileChooser;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PlayerGUI)
 

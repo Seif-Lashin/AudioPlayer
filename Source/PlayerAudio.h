@@ -22,6 +22,8 @@ public:
     void stop();
     void setGain(float gain);
     void setPosition(double pos);
+    void nxt10(double pos);
+    void bck10(double pos);
     double getPosition() const;
     double getLength() const;
 
