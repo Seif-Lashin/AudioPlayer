@@ -3,7 +3,7 @@
 PlayerGUI::PlayerGUI()
 {
     // Add buttons
-    for (auto* btn : { &loadButton, &restartButton, &stopButton }) //text buttons
+    for (auto* btn : { &loadButton, &restartButton , &stopButton, &jumpForward, &jumpBackward})//text buttons
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -77,7 +77,7 @@ PlayerGUI::~PlayerGUI()
 
 void PlayerGUI::paint(juce::Graphics& g)
 {
-    g.fillAll(juce::Colours::darkgrey);
+    g.fillAll(juce::Colours::hotpink);
 }
 
 void PlayerGUI::resized()
@@ -89,6 +89,9 @@ void PlayerGUI::resized()
 	repeatButton.setBounds(340, y, 80, 40);
     /*prevButton.setBounds(340, y, 80, 40);
     nextButton.setBounds(440, y, 80, 40);*/
+    jumpForward.setBounds(440, y, 80, 40);
+    jumpBackward.setBounds(540, y, 80, 40);
+    
 
     trackSlider.setBounds(20, 70, getWidth() - 40, 20);
     volumeSlider.setBounds(20, 100, getWidth() - 40, 30);
@@ -145,11 +148,18 @@ void PlayerGUI::buttonClicked(juce::Button* button)
         playerAudio.stop();
     }
 
-    if (button == &repeatButton)
-    {
-		playerAudio.repeatToggle(repeatButton.getToggleState());
+    if (button == &jumpForward) {
+        playerAudio.nxt10(playerAudio.getPosition());
     }
 
+    if (button == &jumpBackward) {
+        playerAudio.bck10(playerAudio.getPosition());
+    }
+  
+    if (button == &repeatButton)
+    {
+		    playerAudio.repeatToggle(repeatButton.getToggleState());
+    }
 }
 
 void PlayerGUI::sliderValueChanged(juce::Slider* slider)

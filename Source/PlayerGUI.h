@@ -12,7 +12,9 @@ private:
     juce::TextButton loadButton{ "Load File" };
     juce::TextButton restartButton{ "Play" };
     juce::TextButton stopButton{ "Stop" };
-	juce::ToggleButton repeatButton{ "Repeat" };
+	  juce::ToggleButton repeatButton{ "Repeat" };
+    juce::TextButton jumpForward{ "+10s" };
+    juce::TextButton jumpBackward{ "-10s" };
     juce::Slider volumeSlider;
     juce::Slider trackSlider;
     std::unique_ptr<juce::FileChooser> fileChooser;
