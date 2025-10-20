@@ -1,6 +1,6 @@
 #include <JuceHeader.h>
-#include "MainComponent.h"
-
+#include "PlayerAudio.h"
+#include "PlayerGUI.h"
 // Our application class
 class SimpleAudioPlayer : public juce::JUCEApplication
 {
@@ -30,7 +30,7 @@ private:
                 DocumentWindow::allButtons)
         {
             setUsingNativeTitleBar(true);
-            setContentOwned(new MainComponent(), true); // MainComponent = our UI + logic
+            setContentOwned(new PlayerGUI(), true); // MainComponent = our UI + logic
             centreWithSize(400, 200);
             setVisible(true);
         }
