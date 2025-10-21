@@ -23,8 +23,8 @@ public:
     void stop();
     void setGain(float gain);
     void setPosition(double pos);
-    void nxt10(double pos);
-    void bck10(double pos);
+    void plus10(double pos);
+    void minus10(double pos);
     void Jumptostart();
     void Jumptoend();
     double getPosition() const;

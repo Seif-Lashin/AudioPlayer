@@ -73,22 +73,22 @@ void PlayerAudio::Jumptoend() {
     setPosition(getLength());
 }
 
-void PlayerAudio::nxt10(double pos) {
-    double len = transportSource.getLengthInSeconds(); // is the total length of the size file.
-    double nxt = pos + 10.0;
-    if (len > 0.0) {
-        nxt = std::min(nxt, len);
+void PlayerAudio::plus10(double pos) {
+    double Length = getLength(); // is the total length of the size file.
+    double Next = pos + 10.0;
+    if (Length > 0.0) {
+        Next = std::min(Next, Length);
     }
-     transportSource.setPosition(nxt);
+    setPosition(Next);
 }
 
-void PlayerAudio::bck10(double pos) {
-    double len = transportSource.getLengthInSeconds(); // is the total length of the size file.
-    double nxt = pos - 10.0;
-    if (len > 0.0) {
-        nxt = std::max(nxt, 0.0);
+void PlayerAudio::minus10(double pos) {
+    double Length = getLength(); // is the total length of the size file.
+    double Next = pos - 10.0;
+    if (Length > 0.0) {
+        Next = std::max(Next, 0.0);
     }
-    transportSource.setPosition(nxt);
+   setPosition(Next);
 }
 
 double PlayerAudio::getPosition() const {

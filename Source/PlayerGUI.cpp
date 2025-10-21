@@ -4,7 +4,7 @@ PlayerGUI::PlayerGUI()
 {
     // Add buttons
     
-    for (auto* btn : { &loadButton, &restartButton , &stopButton, &jumpForward, &jumpBackward, &startButton, &endtButton, &playtButton })//text buttons
+    for (auto* btn : { &loadButton, &restartButton , &stopButton, &jumpForward, &jumpBackward, &startButton, &endButton, &playButton })//text buttons
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -85,17 +85,14 @@ void PlayerGUI::resized()
 {
     int y = 20;
     loadButton.setBounds(20, y, 100, 40);
-    restartButton.setBounds(140, y, 80, 40);
+    playButton.setBounds(140, y, 80, 40);
     stopButton.setBounds(240, y, 80, 40);
-	repeatButton.setBounds(340, y, 80, 40);
-    /*prevButton.setBounds(340, y, 80, 40);
-    nextButton.setBounds(440, y, 80, 40);*/
-    jumpBackward.setBounds(440, y, 80, 40);
-    jumpForward.setBounds(540, y, 80, 40);
-    startButton.setBounds(640, y, 80, 40);
-    endtButton.setBounds(740, y, 80, 40);
-    playtButton.setBounds(840, y, 80, 40);
-
+    repeatButton.setBounds(340, y, 80, 40);
+    startButton.setBounds(440, y, 80, 40);
+    jumpBackward.setBounds(540, y, 80, 40);
+    jumpForward.setBounds(640, y, 80, 40);
+    endButton.setBounds(740, y, 80, 40);
+    restartButton.setBounds(840, y, 80, 40);
 
     trackSlider.setBounds(20, 70, getWidth() - 40, 20);
     volumeSlider.setBounds(20, 100, getWidth() - 40, 30);
@@ -153,11 +150,11 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     }
 
     if (button == &jumpForward) {
-        playerAudio.nxt10(playerAudio.getPosition());
+        playerAudio.plus10(playerAudio.getPosition());
     }
 
     if (button == &jumpBackward) {
-        playerAudio.bck10(playerAudio.getPosition());
+        playerAudio.minus10(playerAudio.getPosition());
     }
   
     if (button == &repeatButton)
@@ -168,11 +165,11 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     {
         playerAudio.Jumptostart();
     }
-    if (button == &endtButton)
+    if (button == &endButton)
     {
         playerAudio.Jumptoend();
     }
-    if (button == &playtButton)
+    if (button == &playButton)
     {
         playerAudio.play();
     }
