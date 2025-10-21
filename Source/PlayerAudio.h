@@ -8,6 +8,8 @@ private:
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
     juce::AudioTransportSource transportSource;
     bool islooping = false; //bool to keep track of repeat button
+    bool ismuted = false;
+    float lastVolume = 0.5;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PlayerAudio)
 public:
 
@@ -29,7 +31,6 @@ public:
     void Jumptoend();
     double getPosition() const;
     double getLength() const;
-
 	void repeatToggle(bool shouldRepeat);
-
+    void mute(bool shouldMute);
 };
