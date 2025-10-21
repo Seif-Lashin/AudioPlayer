@@ -25,6 +25,8 @@ public:
     void setPosition(double pos);
     void nxt10(double pos);
     void bck10(double pos);
+    void Jumptostart();
+    void Jumptoend();
     double getPosition() const;
     double getLength() const;
 

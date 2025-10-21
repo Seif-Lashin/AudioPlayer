@@ -11,6 +11,9 @@ private:
     PlayerAudio playerAudio;
     juce::TextButton loadButton{ "Load File" };
     juce::TextButton restartButton{ "Reset" };
+    juce::TextButton startButton{ "Start" };
+    juce::TextButton endtButton{ "End" };
+    juce::TextButton playtButton{ "Play" };
     juce::TextButton stopButton{ "Stop" };
 	  juce::ToggleButton repeatButton{ "Repeat" };
     juce::TextButton jumpForward{ "+10s" };

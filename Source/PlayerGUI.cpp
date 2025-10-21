@@ -3,7 +3,8 @@
 PlayerGUI::PlayerGUI()
 {
     // Add buttons
-    for (auto* btn : { &loadButton, &restartButton , &stopButton, &jumpForward, &jumpBackward})//text buttons
+    
+    for (auto* btn : { &loadButton, &restartButton , &stopButton, &jumpForward, &jumpBackward, &startButton, &endtButton, &playtButton })//text buttons
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -91,7 +92,10 @@ void PlayerGUI::resized()
     nextButton.setBounds(440, y, 80, 40);*/
     jumpBackward.setBounds(440, y, 80, 40);
     jumpForward.setBounds(540, y, 80, 40);
-    
+    startButton.setBounds(640, y, 80, 40);
+    endtButton.setBounds(740, y, 80, 40);
+    playtButton.setBounds(840, y, 80, 40);
+
 
     trackSlider.setBounds(20, 70, getWidth() - 40, 20);
     volumeSlider.setBounds(20, 100, getWidth() - 40, 30);
@@ -160,7 +164,19 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     {
 		    playerAudio.repeatToggle(repeatButton.getToggleState());
     }
-}
+    if (button == &startButton)
+    {
+        playerAudio.Jumptostart();
+    }
+    if (button == &endtButton)
+    {
+        playerAudio.Jumptoend();
+    }
+    if (button == &playtButton)
+    {
+        playerAudio.play();
+    }
+}   
 
 void PlayerGUI::sliderValueChanged(juce::Slider* slider)
 {
