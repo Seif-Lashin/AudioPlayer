@@ -85,7 +85,20 @@ PlayerGUI::~PlayerGUI()
 
 void PlayerGUI::paint(juce::Graphics& g)
 {
-    g.fillAll(juce::Colours::darkgrey);
+    juce::Colour startColour = juce::Colours::black;
+    juce::Colour endColour = juce::Colours::purple;
+
+    juce::ColourGradient gradient(
+        startColour,
+        (float)getLocalBounds().getX(),
+        (float)getLocalBounds().getY(),
+        endColour,
+        (float)getLocalBounds().getRight(),
+        (float)getLocalBounds().getY(),
+        false
+    );
+    g.setGradientFill(gradient);
+    g.fillRect(getLocalBounds());
 }
 
 void PlayerGUI::resized()
@@ -190,7 +203,7 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 void PlayerGUI::sliderValueChanged(juce::Slider* slider)
 {
     if (slider == &volumeSlider)
-        playerAudio.setGain((float)slider->getValue());
+        playerAudio.setGainMute((float)slider->getValue());
     if (slider == &trackSlider)
         // this is the manual update
         playerAudio.setPosition((float)slider->getValue());
