@@ -16,6 +16,7 @@ private:
     juce::TextButton playButton{ "Play" };
     juce::TextButton stopButton{ "Stop" };
 	juce::ToggleButton repeatButton{ "Repeat" };
+    juce::ToggleButton muteButton{ "Mute" };
     juce::TextButton jumpForward{ "+10s" };
     juce::TextButton jumpBackward{ "-10s" };
     juce::Slider volumeSlider;

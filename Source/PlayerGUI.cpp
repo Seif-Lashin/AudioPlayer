@@ -4,13 +4,20 @@ PlayerGUI::PlayerGUI()
 {
     // Add buttons
     
-    for (auto* btn : { &loadButton, &restartButton , &stopButton, &jumpForward, &jumpBackward, &startButton, &endButton, &playButton })//text buttons
+    for (auto* btn : { &loadButton,
+        &restartButton, 
+        &stopButton,
+        &jumpForward, 
+        &jumpBackward, 
+        &startButton, 
+        &endButton, 
+        &playButton})//text buttons
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
     }
 
-    for (auto* btn : { &repeatButton }) //toggle buttons
+    for (auto* btn : { &repeatButton, &muteButton}) //toggle buttons
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -78,7 +85,20 @@ PlayerGUI::~PlayerGUI()
 
 void PlayerGUI::paint(juce::Graphics& g)
 {
-    g.fillAll(juce::Colours::darkgrey);
+    juce::Colour startColour = juce::Colours::black;
+    juce::Colour endColour = juce::Colours::purple;
+
+    juce::ColourGradient gradient(
+        startColour,
+        (float)getLocalBounds().getX(),
+        (float)getLocalBounds().getY(),
+        endColour,
+        (float)getLocalBounds().getRight(),
+        (float)getLocalBounds().getY(),
+        false
+    );
+    g.setGradientFill(gradient);
+    g.fillRect(getLocalBounds());
 }
 
 void PlayerGUI::resized()
@@ -88,11 +108,13 @@ void PlayerGUI::resized()
     playButton.setBounds(140, y, 80, 40);
     stopButton.setBounds(240, y, 80, 40);
     repeatButton.setBounds(340, y, 80, 40);
-    startButton.setBounds(440, y, 80, 40);
-    jumpBackward.setBounds(540, y, 80, 40);
-    jumpForward.setBounds(640, y, 80, 40);
-    endButton.setBounds(740, y, 80, 40);
-    restartButton.setBounds(840, y, 80, 40);
+    muteButton.setBounds(440, y, 80, 40);
+    startButton.setBounds(540, y, 80, 40);
+    jumpBackward.setBounds(640, y, 80, 40);
+    jumpForward.setBounds(740, y, 80, 40);
+    endButton.setBounds(840, y, 80, 40);
+    restartButton.setBounds(940, y, 80, 40);
+
 
     trackSlider.setBounds(20, 70, getWidth() - 40, 20);
     volumeSlider.setBounds(20, 100, getWidth() - 40, 30);
@@ -173,12 +195,15 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     {
         playerAudio.play();
     }
+    if (button == &muteButton) {
+        playerAudio.mute(muteButton.getToggleState());
+    }
 }   
 
 void PlayerGUI::sliderValueChanged(juce::Slider* slider)
 {
     if (slider == &volumeSlider)
-        playerAudio.setGain((float)slider->getValue());
+        playerAudio.setGainMute((float)slider->getValue());
     if (slider == &trackSlider)
         // this is the manual update
         playerAudio.setPosition((float)slider->getValue());

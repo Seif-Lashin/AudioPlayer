@@ -38,6 +38,8 @@ void PlayerAudio::loadFile(const juce::File& file) {
             //repeat
             readerSource->setLooping(islooping); //keep track of state when loading new track
 
+            //mute
+            
             // Attach safely
             transportSource.setSource(readerSource.get(),
                 0,
@@ -50,15 +52,24 @@ void PlayerAudio::loadFile(const juce::File& file) {
 
 
 void PlayerAudio::play() {
+    isPlaying = true;
     transportSource.start();
 }
 
 void PlayerAudio::stop() {
+    isPlaying = false;
     transportSource.stop();
 }
 
 void PlayerAudio::setGain(float gain) {
     transportSource.setGain(gain);
+}
+
+void PlayerAudio::setGainMute(float gain) {
+    if (ismuted) {
+        lastVolume = gain;
+    }
+    else setGain(gain);
 }
 
 void PlayerAudio::setPosition(double pos) {
@@ -70,7 +81,7 @@ void PlayerAudio::Jumptostart() {
 }
 
 void PlayerAudio::Jumptoend() {
-    setPosition(getLength());
+   setPosition(getLength());
 }
 
 void PlayerAudio::plus10(double pos) {
@@ -89,6 +100,7 @@ void PlayerAudio::minus10(double pos) {
         Next = std::max(Next, 0.0);
     }
    setPosition(Next);
+   if (isPlaying)play();
 }
 
 double PlayerAudio::getPosition() const {
@@ -103,16 +115,26 @@ void PlayerAudio::repeatToggle(bool shouldRepeat) {
 
     islooping = shouldRepeat; //changing the state of islooping depending on button
     if (readerSource != nullptr) {
-        
+        auto cPos = getPosition();
+        auto length = getLength();
         if (!islooping) { //fixing bug (when closing repeat mid track the track closes)
-            auto cPos = getPosition();
-            auto length = getLength();
-
             if (length > 0) {
                 setPosition(fmod(cPos, length));
             }
         }
-
+        if (isPlaying)play();
         readerSource->setLooping(islooping);
+    }
+}
+
+void PlayerAudio::mute(bool shouldMute) {
+    if (ismuted) {
+        setGain(lastVolume);
+        ismuted = shouldMute;
+    }
+    else {
+        lastVolume = transportSource.getGain();
+        setGain(0.0);
+        ismuted = shouldMute;
     }
 }
