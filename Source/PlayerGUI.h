@@ -10,8 +10,7 @@ class PlayerGUI : public juce::AudioAppComponent,
 private:
     PlayerAudio playerAudio;
     juce::TextButton loadButton{ "Load File" };
-    juce::TextButton restartButton{ "Restart" };
-    juce::TextButton startButton{ "Start" };
+    juce::TextButton restartButton{ "Start" };
     juce::TextButton endButton{ "End" };
     juce::TextButton playButton{ "Play" };
     juce::TextButton stopButton{ "Stop" };

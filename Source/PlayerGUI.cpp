@@ -3,21 +3,15 @@
 PlayerGUI::PlayerGUI()
 {
     // Add buttons
-    
-    for (auto* btn : { &loadButton,
-        &restartButton, 
-        &stopButton,
-        &jumpForward, 
-        &jumpBackward, 
-        &startButton, 
-        &endButton, 
-        &playButton})//text buttons
+
+    for (auto* btn : { &loadButton, &restartButton , &stopButton, &jumpForward, &jumpBackward,
+         &endButton, &playButton })//text buttons
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
     }
 
-    for (auto* btn : { &repeatButton, &muteButton}) //toggle buttons
+    for (auto* btn : { &repeatButton, &muteButton }) //toggle buttons
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -66,7 +60,7 @@ PlayerGUI::PlayerGUI()
 
     trackSlider.setRange(0.0, 1.0);
     trackSlider.setValue(0.0);
-    
+
     for (auto* sli : { &volumeSlider, &trackSlider }) //sliders
     {
         sli->addListener(this);
@@ -103,21 +97,50 @@ void PlayerGUI::paint(juce::Graphics& g)
 
 void PlayerGUI::resized()
 {
-    int y = 20;
-    loadButton.setBounds(20, y, 100, 40);
-    playButton.setBounds(140, y, 80, 40);
-    stopButton.setBounds(240, y, 80, 40);
-    repeatButton.setBounds(340, y, 80, 40);
-    muteButton.setBounds(440, y, 80, 40);
-    startButton.setBounds(540, y, 80, 40);
-    jumpBackward.setBounds(640, y, 80, 40);
-    jumpForward.setBounds(740, y, 80, 40);
-    endButton.setBounds(840, y, 80, 40);
-    restartButton.setBounds(940, y, 80, 40);
+    auto bounds = getLocalBounds();
+    int windowWidth = bounds.getWidth();
+    int windowHeight = bounds.getHeight();
+
+    
+
+    trackSlider.setBounds(600, windowHeight - 125, windowWidth- 1200, 20);
 
 
-    trackSlider.setBounds(20, 70, getWidth() - 40, 20);
-    volumeSlider.setBounds(20, 100, getWidth() - 40, 30);
+    volumeSlider.setBounds(20, 300, windowWidth-40, 50);
+
+
+    std::vector<juce::Button*> orderedButtons = {
+        &loadButton,
+        &restartButton,
+        &jumpBackward,      // Jump -10s
+        &playButton,        // Play/Pause
+        &jumpForward,       // Jump +10s
+        &endButton,         // Jump to End
+        &stopButton,
+    };
+
+
+    int buttonWidth = 100;
+    int buttonHeight = 40;
+    int buttonSpacing = 20;
+    int totalButtons = (int)orderedButtons.size();
+
+
+
+    int totalWidth = (totalButtons * buttonWidth) + ((totalButtons - 1) * buttonSpacing);
+    int startX = (windowWidth - totalWidth) / 2;
+    int button_y = windowHeight - buttonHeight - 20;
+    int currentX = startX;
+
+    for (auto* btn : orderedButtons)
+    {
+        btn->setBounds(currentX, button_y, buttonWidth, buttonHeight);
+        currentX += buttonWidth + buttonSpacing;
+    }
+
+    muteButton.setBounds(1340, button_y, 80, 40);
+    repeatButton.setBounds(1440, button_y, 80, 40);
+
 }
 
 void PlayerGUI::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
@@ -162,7 +185,7 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 
     if (button == &restartButton)
     {
-        playerAudio.setPosition(0.0);
+        playerAudio.Jumptostart();
         playerAudio.play();
     }
 
@@ -178,15 +201,12 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     if (button == &jumpBackward) {
         playerAudio.minus10(playerAudio.getPosition());
     }
-  
+
     if (button == &repeatButton)
     {
-		    playerAudio.repeatToggle(repeatButton.getToggleState());
+        playerAudio.repeatToggle(repeatButton.getToggleState());
     }
-    if (button == &startButton)
-    {
-        playerAudio.Jumptostart();
-    }
+    
     if (button == &endButton)
     {
         playerAudio.Jumptoend();
@@ -195,23 +215,24 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     {
         playerAudio.play();
     }
+
     if (button == &muteButton) {
         playerAudio.mute(muteButton.getToggleState());
     }
-}   
+}
 
 void PlayerGUI::sliderValueChanged(juce::Slider* slider)
 {
     if (slider == &volumeSlider)
-        playerAudio.setGainMute((float)slider->getValue());
+        playerAudio.setGain((float)slider->getValue());
     if (slider == &trackSlider)
         // this is the manual update
         playerAudio.setPosition((float)slider->getValue());
 }
 
-void PlayerGUI::timerCallback() 
+void PlayerGUI::timerCallback()
 {
     if (!trackSlider.isMouseButtonDown())
         // this automatically updates the position as the track goes on, also prevents fighting with user
-        trackSlider.setValue(playerAudio.getPosition(), juce::dontSendNotification); 
+        trackSlider.setValue(playerAudio.getPosition(), juce::dontSendNotification);
 }
