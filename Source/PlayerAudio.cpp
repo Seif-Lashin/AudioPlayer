@@ -1,13 +1,40 @@
 ﻿#include "PlayerAudio.h"
 #include <cmath>
-PlayerAudio::PlayerAudio() {
+
+// edited this part to take properties file
+
+const juce::String key = "Last Played";
+const juce::String key_lastPosition = "Last Position";
+PlayerAudio::PlayerAudio()
+{
     formatManager.registerBasicFormats();
+
+    // preparing the system file
+    juce::PropertiesFile::Options options;
+    options.applicationName = "Simple Audio Player";
+    options.filenameSuffix = "settings";
+    options.osxLibrarySubFolder = "Application Support";
+    options.storageFormat = juce::PropertiesFile::storeAsXML;
+    options.millisecondsBeforeSaving = 0;
+
+    // getter for file path
+    juce::File settingsfile = options.getDefaultFile();
+
+    //creating the PropertiesFile object and store it in our pointer
+    history = std::make_unique<juce::PropertiesFile>(settingsfile, options); 
 }
 
 PlayerAudio::~PlayerAudio() {
     transportSource.stop();
     transportSource.setSource(nullptr);
     readerSource.reset();
+
+    // Saving Position if user exists
+
+    if (transportSource.getLengthInSeconds() > 0.0 && history != nullptr) {
+        history->setValue(key_lastPosition, getPosition());   // saving the current position
+        history->saveIfNeeded();                              // forcesave
+    }
 }
 
 void PlayerAudio::prepareToPlay(int samplesPerBlockExpected, double sampleRate) {
@@ -27,7 +54,14 @@ void PlayerAudio::loadFile(const juce::File& file) {
     {
         if (auto* reader = formatManager.createReaderFor(file))
         {
-            // 🔑 Disconnect old source first
+            savecurrentfilepath(file);
+            
+
+            // clearing out the history
+            history->setValue(key_lastPosition, 0.0);
+            history->saveIfNeeded();
+
+
             transportSource.stop();
             transportSource.setSource(nullptr);
             readerSource.reset();
@@ -45,6 +79,9 @@ void PlayerAudio::loadFile(const juce::File& file) {
                 0,
                 nullptr,
                 reader->sampleRate);
+
+
+            transportSource.setPosition(0.0); // ensuring it starts at 0.
             transportSource.start();
         }
     }
@@ -59,6 +96,10 @@ void PlayerAudio::play() {
 void PlayerAudio::stop() {
     isPlaying = false;
     transportSource.stop();
+    if (transportSource.getLengthInSeconds() > 0 && history != nullptr) {
+        history->setValue(key_lastPosition, getPosition());        // putting the current position in history if program stopped or closed
+        history->saveIfNeeded();                                   // force save
+    }
 }
 
 void PlayerAudio::setGain(float gain) {
@@ -137,4 +178,48 @@ void PlayerAudio::mute(bool shouldMute) {
         setGain(0.0);
         ismuted = shouldMute;
     }
+}
+
+
+void PlayerAudio::savecurrentfilepath(const juce::File& file) {
+    juce::String filepath = file.getFullPathName();  // saving the current file path
+
+    history->setValue(key, filepath);     // putting the filepath in our history file.
+    history->saveIfNeeded();             // forcing the save.
+}
+
+juce::File PlayerAudio::retrievelastfile() {
+    juce::String lastfilepath = history->getValue(key, juce::String()); // getting the filepath from our history
+
+    if (lastfilepath.isNotEmpty()) {       // if the path isn't empty
+        juce::File lastFile(lastfilepath);// we get the file in it
+
+        if (lastFile.existsAsFile()) {       // if the file exists
+            if (auto* reader = formatManager.createReaderFor(lastFile)) {   // attempts to create an audio-reader for the file
+
+                transportSource.stop();
+                transportSource.setSource(nullptr);
+                readerSource.reset();
+
+                // Create new reader source
+                readerSource = std::make_unique<juce::AudioFormatReaderSource>(reader, true);
+
+               
+                transportSource.setSource(readerSource.get(), 0, nullptr, reader->sampleRate);
+
+
+                //getting the saved position, if none its 0.0
+                double lastPos = history->getDoubleValue(key_lastPosition, 0.0);   
+                transportSource.setPosition(lastPos);
+                transportSource.start();
+
+
+                return lastFile;   // return it
+            }
+
+                                                      
+        }
+    }
+
+    return juce::File(); // returning a dummy file
 }

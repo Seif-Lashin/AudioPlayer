@@ -6,8 +6,10 @@ class PlayerAudio : public juce::AudioSource{
 private:
     juce::AudioFormatManager formatManager;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
+  
+    std::unique_ptr<juce::PropertiesFile>history; // playeraudio owns its own settings file
     juce::AudioTransportSource transportSource;
-    bool islooping = false; //bool to keep track of repeat button
+    bool islooping = false;
     bool ismuted = false;
     bool isPlaying = true;
     float lastVolume = 0.5;
@@ -35,4 +37,9 @@ public:
     double getLength() const;
 	void repeatToggle(bool shouldRepeat);
     void mute(bool shouldMute);
+
+    //when a new file is loaded
+    void savecurrentfilepath(const juce::File& file);
+    // when last session is pressed
+    juce::File retrievelastfile();
 };

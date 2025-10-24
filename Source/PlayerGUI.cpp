@@ -1,11 +1,12 @@
 #include "PlayerGUI.h"
 
+
 PlayerGUI::PlayerGUI()
 {
     // Add buttons
 
     for (auto* btn : { &loadButton, &restartButton , &stopButton, &jumpForward, &jumpBackward,
-         &endButton, &playButton })//text buttons
+         &endButton, &playButton, &lastSession })//text buttons
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -75,6 +76,7 @@ PlayerGUI::PlayerGUI()
 PlayerGUI::~PlayerGUI()
 {
     shutdownAudio();
+    setLookAndFeel(nullptr);
 }
 
 void PlayerGUI::paint(juce::Graphics& g)
@@ -140,6 +142,7 @@ void PlayerGUI::resized()
 
     muteButton.setBounds(1340, button_y, 80, 40);
     repeatButton.setBounds(1440, button_y, 80, 40);
+    lastSession.setBounds(1340, 100, 150, 40);
 
 }
 
@@ -218,6 +221,13 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 
     if (button == &muteButton) {
         playerAudio.mute(muteButton.getToggleState());
+    }
+
+    if (button == &lastSession) {
+        juce::File loadedfile = playerAudio.retrievelastfile(); // getting the file
+        if (loadedfile.existsAsFile()) { // if it exists
+            trackSlider.setRange(0.0, playerAudio.getLength()); // syncing the trackslider with the file 
+        }
     }
 }
 

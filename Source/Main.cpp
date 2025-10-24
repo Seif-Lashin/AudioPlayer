@@ -28,15 +28,19 @@ private:
     public:
         MainWindow(juce::String name)
             : DocumentWindow(name,
-                juce::Colours::lightgrey,
-                DocumentWindow::allButtons)
+                juce::Colours::darkgrey,
+                juce::DocumentWindow::closeButton | juce::DocumentWindow::minimiseButton | juce::DocumentWindow::maximiseButton
+               
+                )
         {
-            setUsingNativeTitleBar(true);
-            setContentOwned(new PlayerGUI(), true); // MainComponent = our UI + logic
+            setUsingNativeTitleBar(false);// not using operating system's title bar
+            setOpaque(false); // to make round corners , ##not done yet##
+
+            setContentOwned(new PlayerGUI(), true);
             centreWithSize(400, 200);
             setVisible(true);
         }
-
+                
         void closeButtonPressed() override
         {
             juce::JUCEApplication::getInstance()->systemRequestedQuit();

@@ -2,6 +2,7 @@
 #include <JuceHeader.h>
 #include "PlayerAudio.h"
 
+
 class PlayerGUI : public juce::AudioAppComponent,
     public juce::Button::Listener,
     public juce::Slider::Listener,
@@ -18,6 +19,7 @@ private:
     juce::ToggleButton muteButton{ "Mute" };
     juce::TextButton jumpForward{ "+10s" };
     juce::TextButton jumpBackward{ "-10s" };
+    juce::TextButton lastSession{ "Last Session" };
     juce::Slider volumeSlider;
     juce::Slider trackSlider;
     std::unique_ptr<juce::FileChooser> fileChooser;
