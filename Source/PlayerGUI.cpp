@@ -6,7 +6,7 @@ PlayerGUI::PlayerGUI()
     // Add buttons
 
     for (auto* btn : { &loadButton, &restartButton , &stopButton, &jumpForward, &jumpBackward,
-         &endButton, &playButton, &lastSession })//text buttons
+         &endButton, &playButton, &lastSession, &addMarker })//text buttons
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -17,6 +17,11 @@ PlayerGUI::PlayerGUI()
         btn->addListener(this);
         addAndMakeVisible(btn);
     }
+
+    // Marker logic
+    addAndMakeVisible(markerList);
+    markerList.addListener(this);
+    markerList.setTextWhenNoChoicesAvailable("No Markers Available<3");
 
     // Volume slider
     volumeSlider.textFromValueFunction = [](double value) {//cahnging value to percentage
@@ -140,6 +145,8 @@ void PlayerGUI::resized()
     muteButton.setBounds(1340, button_y, 80, 40);
     repeatButton.setBounds(1440, button_y, 80, 40);
     lastSession.setBounds(1340, 100, 150, 40);
+    addMarker.setBounds(1340, 150, 150, 40);
+    markerList.setBounds(1340, 200, 150, 30);
 
 }
 
@@ -226,6 +233,12 @@ void PlayerGUI::buttonClicked(juce::Button* button)
             trackSlider.setRange(0.0, playerAudio.getLength()); // syncing the trackslider with the file 
         }
     }
+
+    if (button == &addMarker) {
+        playerAudio.addPositionAsMarker();
+        updateMarkerList(); // its not a function yet?
+
+    }
 }
 
 void PlayerGUI::sliderValueChanged(juce::Slider* slider)
@@ -243,3 +256,42 @@ void PlayerGUI::timerCallback()
         // this automatically updates the position as the track goes on, also prevents fighting with user
         trackSlider.setValue(playerAudio.getPosition(), juce::dontSendNotification);
 }
+
+
+// Responsible for finding the playback time of the marker and jumping to it.
+void PlayerGUI::comboBoxChanged(juce::ComboBox* newComboBox){
+    if (newComboBox == &markerList) {
+        const auto& markers = playerAudio.getMarkers();
+        int selectedidx = markerList.getSelectedItemIndex();
+
+        if (selectedidx >= 0 && selectedidx < markers.size()) {
+            double playbacktime = markers[selectedidx];
+            playerAudio.setPosition(playbacktime);
+        }
+    }
+}
+
+
+void PlayerGUI::updateMarkerList() {
+    markerList.clear(juce::dontSendNotification);
+
+    const auto& markers = playerAudio.getMarkers();
+    int markerNumber = 1;
+    for (double timestamp : markers) {
+        //------------------------Formatting Logic borrowed from trackslider-------------------------------------
+        int totalSeconds = (int)timestamp;
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        juce::String secondsStr = juce::String(seconds).paddedLeft('0', 2);
+        juce::String timeString = juce::String(minutes) + ":" + secondsStr;
+        //-------------------------------------------------------------------------------------------------------
+
+        juce::String markerLabel = "Marker " + juce::String(markerNumber) + " (" + timeString + ")";
+
+        //add to combobox
+        //first param is text, second is item id, 1 based index
+        markerList.addItem(markerLabel, markerNumber);
+        markerNumber++;
+    }
+}
+

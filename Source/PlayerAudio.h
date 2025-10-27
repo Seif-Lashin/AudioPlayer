@@ -6,13 +6,14 @@ class PlayerAudio : public juce::AudioSource{
 private:
     juce::AudioFormatManager formatManager;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
-  
     std::unique_ptr<juce::PropertiesFile>history; // playeraudio owns its own settings file
     juce::AudioTransportSource transportSource;
     bool islooping = false;
     bool ismuted = false;
     bool isPlaying = true;
     float lastVolume = 0.5;
+    std::vector<double> trackMarkers;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PlayerAudio)
 public:
 
@@ -42,4 +43,12 @@ public:
     void savecurrentfilepath(const juce::File& file);
     // when last session is pressed
     juce::File retrievelastfile();
+
+
+    // add current position to marker list
+    void addPositionAsMarker();
+    // Referencing the list of markers to show
+    const std::vector<double>& getMarkers() const;
+    //clears current markers when file is no longer live
+    void clearMarkers();
 };

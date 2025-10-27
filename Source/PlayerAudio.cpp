@@ -55,6 +55,7 @@ void PlayerAudio::loadFile(const juce::File& file) {
         if (auto* reader = formatManager.createReaderFor(file))
         {
             savecurrentfilepath(file);
+            clearMarkers();
             
 
             // clearing out the history
@@ -222,4 +223,19 @@ juce::File PlayerAudio::retrievelastfile() {
     }
 
     return juce::File(); // returning a dummy file
+}
+
+
+void PlayerAudio::addPositionAsMarker() {
+    double current = getPosition();
+    trackMarkers.push_back(current);
+    sort(trackMarkers.begin(), trackMarkers.end());
+}
+
+const std::vector<double>& PlayerAudio::getMarkers() const {
+    return trackMarkers;
+}
+
+void PlayerAudio::clearMarkers() {
+    trackMarkers.clear();
 }
