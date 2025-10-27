@@ -82,7 +82,7 @@ PlayerGUI::~PlayerGUI()
 void PlayerGUI::paint(juce::Graphics& g)
 {
     juce::Colour startColour = juce::Colours::black;
-    juce::Colour endColour = juce::Colours::purple;
+    juce::Colour endColour = juce::Colours::crimson;
 
     juce::ColourGradient gradient(
         startColour,
@@ -108,7 +108,7 @@ void PlayerGUI::resized()
     trackSlider.setBounds(600, windowHeight - 125, windowWidth- 1200, 20);
 
 
-    volumeSlider.setBounds(20, 300, windowWidth-40, 50);
+    volumeSlider.setBounds(30, windowHeight -  50, windowWidth - 1300, 20);
 
 
     std::vector<juce::Button*> orderedButtons = {
