@@ -96,7 +96,7 @@ void PlayerGUI::paint(juce::Graphics& g)
     g.setGradientFill(gradient);
     g.fillRect(getLocalBounds());
 }
-
+// Buttons layout 
 void PlayerGUI::resized()
 {
     auto bounds = getLocalBounds();
@@ -106,14 +106,12 @@ void PlayerGUI::resized()
     
 
     trackSlider.setBounds(600, windowHeight - 125, windowWidth- 1200, 20);
-
-
     volumeSlider.setBounds(30, windowHeight -  50, windowWidth - 1300, 20);
 
 
     std::vector<juce::Button*> orderedButtons = {
-        &loadButton,
-        &restartButton,
+        &loadButton, 
+        &restartButton,     // restart
         &jumpBackward,      // Jump -10s
         &playButton,        // Play/Pause
         &jumpForward,       // Jump +10s
@@ -128,11 +126,10 @@ void PlayerGUI::resized()
     int totalButtons = (int)orderedButtons.size();
 
 
-
     int totalWidth = (totalButtons * buttonWidth) + ((totalButtons - 1) * buttonSpacing);
-    int startX = (windowWidth - totalWidth) / 2;
+    int startx = (windowWidth - totalWidth) / 2;
     int button_y = windowHeight - buttonHeight - 20;
-    int currentX = startX;
+    int currentX = startx;
 
     for (auto* btn : orderedButtons)
     {

@@ -26,6 +26,7 @@ private:
     class MainWindow : public juce::DocumentWindow
     {
     public:
+       // Changed the standard OS window to our custom window
         MainWindow(juce::String name)
             : DocumentWindow(name,
                 juce::Colours::darkgrey,
