@@ -1,10 +1,9 @@
 #include "PlayerGUI.h"
-
+#include <vector> // Make sure this is included for std::vector
 
 PlayerGUI::PlayerGUI()
 {
     // Add buttons
-
     for (auto* btn : { &loadButton, &restartButton , &stopButton, &jumpForward, &jumpBackward,
          &endButton, &playButton, &lastSession, &addMarker })//text buttons
     {
@@ -22,34 +21,30 @@ PlayerGUI::PlayerGUI()
     addAndMakeVisible(markerList);
     markerList.addListener(this);
     markerList.setTextWhenNoChoicesAvailable("No Markers Available<3");
+    markerList.setTextWhenNothingSelected("Select a Marker");
 
     // Volume slider
     volumeSlider.textFromValueFunction = [](double value) {//cahnging value to percentage
         double percent = value * 100;
-
         return juce::String((int)percent) + "%";
         };
     volumeSlider.valueFromTextFunction = [](const juce::String& text) {//changing percentage to value
         int percentagePos = text.indexOf("%");
-
         if (percentagePos != -1) {
             juce::String percent = text.substring(0, percentagePos);
             return percent.getDoubleValue() / 100.0;
         }
-
         return text.getDoubleValue() / 100.0;
         };
     volumeSlider.setRange(0.0, 1.0, 0.01);
     volumeSlider.setValue(0.5);
 
+    // Track slider
     trackSlider.textFromValueFunction = [](double value) {// changing the value to a M:SS
         int totalSeconds = (int)value;
-
         int minutes = totalSeconds / 60;
         int seconds = totalSeconds % 60;
-
         juce::String secondsStr = juce::String(seconds).paddedLeft('0', 2);
-
         return juce::String(minutes) + ":" + secondsStr;
         };
     trackSlider.valueFromTextFunction = [](const juce::String& text) { //changing the M:SS to the value
@@ -57,13 +52,10 @@ PlayerGUI::PlayerGUI()
         if (colonPos != -1) {
             juce::String minutesStr = text.substring(0, colonPos);
             juce::String secondsStr = text.substring(colonPos + 1);
-
             return minutesStr.getIntValue() * 60.0 + secondsStr.getIntValue();
         }
-
         return text.getDoubleValue();
         };
-
     trackSlider.setRange(0.0, 1.0);
     trackSlider.setValue(0.0);
 
@@ -73,7 +65,8 @@ PlayerGUI::PlayerGUI()
         addAndMakeVisible(sli);
     }
 
-    setSize(500, 250);
+    // Set a reasonable default size
+    setSize(800, 300);
     setAudioChannels(0, 2);
     startTimer(60); // this starts the timer, 60 updates per second
 }
@@ -101,7 +94,8 @@ void PlayerGUI::paint(juce::Graphics& g)
     g.setGradientFill(gradient);
     g.fillRect(getLocalBounds());
 }
-// Buttons layout 
+
+
 void PlayerGUI::resized()
 {
     auto bounds = getLocalBounds();
@@ -109,46 +103,84 @@ void PlayerGUI::resized()
     int windowHeight = bounds.getHeight();
 
     
+    const int margin = 15;
+    const int spacing = 10;
+    const int buttonHeight = 40;
+    const int smallButtonWidth = 80;
+    const int sliderHeight = 20;
+    const int comboBoxHeight = 30;
+    const int rightClusterWidth = 150; 
 
-    trackSlider.setBounds(600, windowHeight - 125, windowWidth- 1200, 20);
-    volumeSlider.setBounds(30, windowHeight -  50, windowWidth - 1300, 20);
 
+    int currentY = margin;
+    int rightX = windowWidth - margin - rightClusterWidth;
+
+    lastSession.setBounds(rightX, currentY, rightClusterWidth, buttonHeight);
+    currentY += buttonHeight + spacing;
+    addMarker.setBounds(rightX, currentY, rightClusterWidth, buttonHeight);
+    currentY += buttonHeight + spacing;
+    markerList.setBounds(rightX, currentY, rightClusterWidth, comboBoxHeight);
+
+   
+    int bottomRowY = windowHeight - margin - buttonHeight;
+
+    
+    const int volumeSliderWidth = 150;
+    
+    int volumeSliderY = bottomRowY + (buttonHeight - sliderHeight) / 2;
+    volumeSlider.setBounds(margin, volumeSliderY, volumeSliderWidth, sliderHeight);
+
+   
+    int mainAreaRightEdge = rightX - spacing;
+
+    int currentX = mainAreaRightEdge - smallButtonWidth;
+    repeatButton.setBounds(currentX, bottomRowY, smallButtonWidth, buttonHeight);
+
+    currentX -= (smallButtonWidth + spacing);
+    muteButton.setBounds(currentX, bottomRowY, smallButtonWidth, buttonHeight);
+
+    int transportAreaX = margin + volumeSliderWidth + spacing;
+    int transportAreaWidth = currentX - spacing - transportAreaX;
 
     std::vector<juce::Button*> orderedButtons = {
-        &loadButton, 
-        &restartButton,     // restart
-        &jumpBackward,      // Jump -10s
-        &playButton,        // Play/Pause
-        &jumpForward,       // Jump +10s
-        &endButton,         // Jump to End
+        &loadButton,
+        &restartButton,
+        &jumpBackward,
+        &playButton,
+        &jumpForward,
+        &endButton,
         &stopButton,
     };
 
-
-    int buttonWidth = 100;
-    int buttonHeight = 40;
-    int buttonSpacing = 20;
-    int totalButtons = (int)orderedButtons.size();
-
-
-    int totalWidth = (totalButtons * buttonWidth) + ((totalButtons - 1) * buttonSpacing);
-    int startx = (windowWidth - totalWidth) / 2;
-    int button_y = windowHeight - buttonHeight - 20;
-    int currentX = startx;
-
-    for (auto* btn : orderedButtons)
+    int numButtons = (int)orderedButtons.size();
+    if (numButtons > 0)
     {
-        btn->setBounds(currentX, button_y, buttonWidth, buttonHeight);
-        currentX += buttonWidth + buttonSpacing;
+      
+        int buttonWidth = (transportAreaWidth - (spacing * (numButtons - 1))) / numButtons;
+
+        const int maxButtonWidth = 100;
+        int transportX = transportAreaX;
+
+        if (buttonWidth > maxButtonWidth)
+        {
+            buttonWidth = maxButtonWidth;
+            int totalWidth = (numButtons * buttonWidth) + ((numButtons - 1) * spacing);
+            transportX = transportAreaX + (transportAreaWidth - totalWidth) / 2;
+        }
+
+        for (auto* btn : orderedButtons)
+        {
+            btn->setBounds(transportX, bottomRowY, buttonWidth, buttonHeight);
+            transportX += buttonWidth + spacing;
+        }
     }
 
-    muteButton.setBounds(1340, button_y, 80, 40);
-    repeatButton.setBounds(1440, button_y, 80, 40);
-    lastSession.setBounds(1340, 100, 150, 40);
-    addMarker.setBounds(1340, 150, 150, 40);
-    markerList.setBounds(1340, 200, 150, 30);
-
+    
+    int sliderY = bottomRowY - spacing - sliderHeight;
+    int sliderWidth = mainAreaRightEdge - margin; 
+    trackSlider.setBounds(margin, sliderY, sliderWidth, sliderHeight);
 }
+
 
 void PlayerGUI::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
@@ -187,6 +219,9 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 
                 //only set the range when loading a new file
                 trackSlider.setRange(0.0, playerAudio.getLength());
+
+                // When loading a new file, update (clear) the marker list
+                updateMarkerList();
             });
     }
 
@@ -198,7 +233,7 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 
     if (button == &stopButton)
     {
-        playerAudio.stop();
+        playerAudio.stop(); 
     }
 
     if (button == &jumpForward) {
@@ -213,7 +248,7 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     {
         playerAudio.repeatToggle(repeatButton.getToggleState());
     }
-    
+
     if (button == &endButton)
     {
         playerAudio.Jumptoend();
@@ -230,14 +265,16 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     if (button == &lastSession) {
         juce::File loadedfile = playerAudio.retrievelastfile(); // getting the file
         if (loadedfile.existsAsFile()) { // if it exists
-            trackSlider.setRange(0.0, playerAudio.getLength()); // syncing the trackslider with the file 
+            trackSlider.setRange(0.0, playerAudio.getLength()); // syncing the trackslider with the file
+
+            // Also need to load the markers for the last session
+            updateMarkerList();
         }
     }
 
     if (button == &addMarker) {
         playerAudio.addPositionAsMarker();
-        updateMarkerList(); // its not a function yet?
-
+        updateMarkerList(); // This will now work
     }
 }
 
@@ -245,21 +282,31 @@ void PlayerGUI::sliderValueChanged(juce::Slider* slider)
 {
     if (slider == &volumeSlider)
         playerAudio.setGain((float)slider->getValue());
+
     if (slider == &trackSlider)
-        // this is the manual update
-        playerAudio.setPosition((float)slider->getValue());
+    {
+        // Only update position if the user is dragging the slider
+        if (slider->isMouseButtonDown())
+        {
+            playerAudio.setPosition((float)slider->getValue());
+        }
+    }
 }
 
 void PlayerGUI::timerCallback()
 {
+    // This timer callback automatically updates the slider's visual position.
+    // We check !isMouseButtonDown() to prevent "fighting" with the user
+    // if they are currently dragging the slider.
     if (!trackSlider.isMouseButtonDown())
-        // this automatically updates the position as the track goes on, also prevents fighting with user
+    {
         trackSlider.setValue(playerAudio.getPosition(), juce::dontSendNotification);
+    }
 }
 
 
 // Responsible for finding the playback time of the marker and jumping to it.
-void PlayerGUI::comboBoxChanged(juce::ComboBox* newComboBox){
+void PlayerGUI::comboBoxChanged(juce::ComboBox* newComboBox) {
     if (newComboBox == &markerList) {
         const auto& markers = playerAudio.getMarkers();
         int selectedidx = markerList.getSelectedItemIndex();
@@ -278,13 +325,13 @@ void PlayerGUI::updateMarkerList() {
     const auto& markers = playerAudio.getMarkers();
     int markerNumber = 1;
     for (double timestamp : markers) {
-        //------------------------Formatting Logic borrowed from trackslider-------------------------------------
+        
         int totalSeconds = (int)timestamp;
         int minutes = totalSeconds / 60;
         int seconds = totalSeconds % 60;
         juce::String secondsStr = juce::String(seconds).paddedLeft('0', 2);
         juce::String timeString = juce::String(minutes) + ":" + secondsStr;
-        //-------------------------------------------------------------------------------------------------------
+        
 
         juce::String markerLabel = "Marker " + juce::String(markerNumber) + " (" + timeString + ")";
 
@@ -294,4 +341,3 @@ void PlayerGUI::updateMarkerList() {
         markerNumber++;
     }
 }
-
