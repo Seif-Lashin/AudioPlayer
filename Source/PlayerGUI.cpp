@@ -22,6 +22,7 @@ PlayerGUI::PlayerGUI()
     addAndMakeVisible(markerList);
     markerList.addListener(this);
     markerList.setTextWhenNoChoicesAvailable("No Markers Available<3");
+    markerList.setTextWhenNothingSelected("Select a Marker");
 
     // Volume slider
     volumeSlider.textFromValueFunction = [](double value) {//cahnging value to percentage
