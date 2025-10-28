@@ -38,6 +38,8 @@ void PlayerAudio::loadFile(const juce::File& file) {
             //repeat
             readerSource->setLooping(islooping); //keep track of state when loading new track
 
+            //mute
+            
             // Attach safely
             transportSource.setSource(readerSource.get(),
                 0,
@@ -114,5 +116,17 @@ void PlayerAudio::repeatToggle(bool shouldRepeat) {
         }
 
         readerSource->setLooping(islooping);
+    }
+}
+
+void PlayerAudio::mute(bool shouldMute) {
+    if (ismuted) {
+        setGain(lastVolume);
+        ismuted = shouldMute;
+    }
+    else {
+        lastVolume = transportSource.getGain();
+        setGain(0.0);
+        ismuted = shouldMute;
     }
 }
