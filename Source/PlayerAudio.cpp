@@ -239,3 +239,38 @@ const std::vector<double>& PlayerAudio::getMarkers() const {
 void PlayerAudio::clearMarkers() {
     trackMarkers.clear();
 }
+
+void PlayerAudio::FindPlayback(juce::ComboBox* newComboBox, juce::ComboBox& markerList) {
+    if (newComboBox == &markerList) {
+        const auto& markers = getMarkers();
+        int selectedidx = markerList.getSelectedItemIndex();
+
+        if (selectedidx >= 0 && selectedidx < markers.size()) {
+            double playbacktime = markers[selectedidx];
+            setPosition(playbacktime);
+        }
+    }
+}
+
+void PlayerAudio::UpdateMarkerList(juce::ComboBox& markerList) {
+    markerList.clear(juce::dontSendNotification);
+
+    const auto& markers = getMarkers();
+    int markerNumber = 1;
+    for (double timestamp : markers) {
+
+        int totalSeconds = (int)timestamp;
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        juce::String secondsStr = juce::String(seconds).paddedLeft('0', 2);
+        juce::String timeString = juce::String(minutes) + ":" + secondsStr;
+
+
+        juce::String markerLabel = "Marker " + juce::String(markerNumber) + " (" + timeString + ")";
+
+        //add to combobox
+        //first param is text, second is item id
+        markerList.addItem(markerLabel, markerNumber);
+        markerNumber++;
+    }
+}

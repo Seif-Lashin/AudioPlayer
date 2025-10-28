@@ -51,4 +51,7 @@ public:
     const std::vector<double>& getMarkers() const;
     //clears current markers when file is no longer live
     void clearMarkers();
+
+    void FindPlayback(juce::ComboBox* newcombobox, juce::ComboBox & markerList);
+    void UpdateMarkerList(juce::ComboBox& markerList);
 };
