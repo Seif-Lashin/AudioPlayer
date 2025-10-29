@@ -25,16 +25,15 @@ PlayerAudio::PlayerAudio()
 }
 
 PlayerAudio::~PlayerAudio() {
-    transportSource.stop();
-    transportSource.setSource(nullptr);
-    readerSource.reset();
-
     // Saving Position if user exists
-
-    if (transportSource.getLengthInSeconds() > 0.0 && history != nullptr) {
+    if (getLength() > 0.0 && history != nullptr) {
         history->setValue(key_lastPosition, getPosition());   // saving the current position
         history->saveIfNeeded();                              // forcesave
     }
+
+    transportSource.stop();
+    transportSource.setSource(nullptr);
+    readerSource.reset();
 }
 
 void PlayerAudio::prepareToPlay(int samplesPerBlockExpected, double sampleRate) {
@@ -110,10 +109,6 @@ void PlayerAudio::play() {
 void PlayerAudio::stop() {
     isPlaying = false;
     transportSource.stop();
-    if (transportSource.getLengthInSeconds() > 0 && history != nullptr) {
-        history->setValue(key_lastPosition, getPosition());        // putting the current position in history if program stopped or closed
-        history->saveIfNeeded();                                   // force save
-    }
 }
 
 void PlayerAudio::setGain(float gain) {
