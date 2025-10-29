@@ -11,6 +11,7 @@ private:
     bool islooping = false;
     bool ismuted = false;
     bool isPlaying = true;
+    bool isFun = false;
     float lastVolume = 0.5;
     std::vector<double> trackMarkers;
 
@@ -40,6 +41,8 @@ public:
     double getPosition() const;
     double getLength() const;
 	void repeatToggle(bool shouldRepeat);
+    void funToggle(bool shouldfun);
+    bool getFunState() const;
     void mute(bool shouldMute);
 
     //when a new file is loaded

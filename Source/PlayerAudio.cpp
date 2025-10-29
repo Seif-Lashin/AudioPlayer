@@ -182,6 +182,14 @@ void PlayerAudio::repeatToggle(bool shouldRepeat) {
     }
 }
 
+void PlayerAudio::funToggle(bool shouldfun) {
+    isFun = shouldfun;
+}
+
+bool PlayerAudio::getFunState() const {
+    return isFun;
+}
+
 void PlayerAudio::mute(bool shouldMute) {
     if (ismuted) {
         setGain(lastVolume);

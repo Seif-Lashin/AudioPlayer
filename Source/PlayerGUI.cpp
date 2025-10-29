@@ -11,7 +11,7 @@ PlayerGUI::PlayerGUI()
         addAndMakeVisible(btn);
     }
 
-    for (auto* btn : { &repeatButton, &muteButton }) //toggle buttons
+    for (auto* btn : { &repeatButton, &muteButton, &funButton }) //toggle buttons
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -83,14 +83,20 @@ void PlayerGUI::paint(juce::Graphics& g)
     float rms = playerAudio.getRMS();
     juce::Colour startColour = juce::Colours::purple;
     juce::Colour endColour = juce::Colours::hotpink;
-    juce::Colour highlighter = juce::Colours::white;
 
-    float normalRMS = juce::jlimit(0.0f, 1.0f, rms * 5.0f);
+    juce::Colour NewstartColour = startColour;
+    juce::Colour NEWendColour = endColour;
 
-    juce::Colour NEWendColour = endColour.interpolatedWith(highlighter, normalRMS);
-    juce::Colour NewstartColour = startColour.interpolatedWith(highlighter, normalRMS);
+    if (playerAudio.getFunState())
+    {
+        juce::Colour highlighter = juce::Colours::black;
+        float normalRMS = juce::jlimit(0.0f, 1.0f, rms * 5.0f);
 
+        NEWendColour = endColour.interpolatedWith(highlighter, normalRMS);
+        NewstartColour = startColour.interpolatedWith(highlighter, normalRMS);
+    }
 
+    
     juce::ColourGradient gradient(
         NewstartColour,
         (float)getLocalBounds().getX(),
@@ -147,6 +153,9 @@ void PlayerGUI::resized()
 
     currentX -= (smallButtonWidth + spacing);
     muteButton.setBounds(currentX, bottomRowY, smallButtonWidth, buttonHeight);
+
+    currentX -= (smallButtonWidth + spacing);;
+    funButton.setBounds(currentX, bottomRowY, smallButtonWidth, buttonHeight);
 
     int transportAreaX = margin + volumeSliderWidth + spacing;
     int transportAreaWidth = currentX - spacing - transportAreaX;
@@ -256,6 +265,9 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     if (button == &repeatButton)
     {
         playerAudio.repeatToggle(repeatButton.getToggleState());
+    }
+    if (button == &funButton) {
+        playerAudio.funToggle(funButton.getToggleState());
     }
 
     if (button == &endButton)
