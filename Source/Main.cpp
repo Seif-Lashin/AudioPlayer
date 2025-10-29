@@ -35,10 +35,10 @@ private:
                 )
         {
             setUsingNativeTitleBar(false);// not using operating system's title bar
-            setOpaque(false); // to make round corners , ##not done yet##
+            setOpaque(false);             // to make round corners , ##not done yet##
 
             setContentOwned(new PlayerGUI(), true);
-            centreWithSize(400, 200);
+            centreWithSize(1000, 500);
             setVisible(true);
         }
                 

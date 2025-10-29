@@ -25,16 +25,15 @@ PlayerAudio::PlayerAudio()
 }
 
 PlayerAudio::~PlayerAudio() {
-    transportSource.stop();
-    transportSource.setSource(nullptr);
-    readerSource.reset();
-
     // Saving Position if user exists
-
-    if (transportSource.getLengthInSeconds() > 0.0 && history != nullptr) {
+    if (getLength() > 0.0 && history != nullptr) {
         history->setValue(key_lastPosition, getPosition());   // saving the current position
         history->saveIfNeeded();                              // forcesave
     }
+
+    transportSource.stop();
+    transportSource.setSource(nullptr);
+    readerSource.reset();
 }
 
 void PlayerAudio::prepareToPlay(int samplesPerBlockExpected, double sampleRate) {
@@ -43,6 +42,19 @@ void PlayerAudio::prepareToPlay(int samplesPerBlockExpected, double sampleRate) 
 
 void PlayerAudio::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) {
     transportSource.getNextAudioBlock(bufferToFill);
+
+    float rms = 0.0f;
+    int cntChannels = bufferToFill.buffer->getNumChannels();
+    for (int channel = 0; channel < cntChannels; ++channel) {
+        rms += bufferToFill.buffer->getRMSLevel(channel, bufferToFill.startSample, bufferToFill.numSamples); //getRMSLevel gets the energy of the block
+    }
+
+    if (cntChannels > 0) {
+        rms /= (float)cntChannels;
+    }
+
+    float oldRMS = currentRMS.load(), decayRMS = oldRMS * 0.95f;
+    currentRMS.store(std::max(rms, decayRMS));
 }
 
 void PlayerAudio::releaseResources() {
@@ -97,10 +109,6 @@ void PlayerAudio::play() {
 void PlayerAudio::stop() {
     isPlaying = false;
     transportSource.stop();
-    if (transportSource.getLengthInSeconds() > 0 && history != nullptr) {
-        history->setValue(key_lastPosition, getPosition());        // putting the current position in history if program stopped or closed
-        history->saveIfNeeded();                                   // force save
-    }
 }
 
 void PlayerAudio::setGain(float gain) {
@@ -169,6 +177,14 @@ void PlayerAudio::repeatToggle(bool shouldRepeat) {
     }
 }
 
+void PlayerAudio::funToggle(bool shouldfun) {
+    isFun = shouldfun;
+}
+
+bool PlayerAudio::getFunState() const {
+    return isFun;
+}
+
 void PlayerAudio::mute(bool shouldMute) {
     if (ismuted) {
         setGain(lastVolume);
@@ -228,6 +244,14 @@ juce::File PlayerAudio::retrievelastfile() {
 
 void PlayerAudio::addPositionAsMarker() {
     double current = getPosition();
+
+    for (double marker : trackMarkers) {
+        if (std::abs(marker - current) <= 0.01) {
+            return;
+        }
+    }
+
+
     trackMarkers.push_back(current);
     sort(trackMarkers.begin(), trackMarkers.end());
 }
@@ -238,4 +262,61 @@ const std::vector<double>& PlayerAudio::getMarkers() const {
 
 void PlayerAudio::clearMarkers() {
     trackMarkers.clear();
+}
+
+void PlayerAudio::FindPlayback(juce::ComboBox* newComboBox, juce::ComboBox& markerList) {
+    if (newComboBox == &markerList) {
+        const auto& markers = getMarkers();
+        int selectedidx = markerList.getSelectedItemIndex();
+
+        if (selectedidx >= 0 && selectedidx < markers.size()) {
+            double playbacktime = markers[selectedidx];
+            setPosition(playbacktime);
+        }
+    }
+}
+
+void PlayerAudio::UpdateMarkerList(juce::ComboBox& markerList) {
+    markerList.clear(juce::dontSendNotification);
+
+    const auto& markers = getMarkers();
+    int markerNumber = 1;
+    for (double timestamp : markers) {
+
+        int totalSeconds = (int)timestamp;
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        juce::String secondsStr = juce::String(seconds).paddedLeft('0', 2);
+        juce::String timeString = juce::String(minutes) + ":" + secondsStr;
+
+
+        juce::String markerLabel = "Marker " + juce::String(markerNumber) + " (" + timeString + ")";
+
+        //add to combobox
+        //first param is text, second is item id
+        markerList.addItem(markerLabel, markerNumber);
+        markerNumber++;
+    }
+}
+
+// returns current marker that can be selected
+int PlayerAudio::markerChecker() {
+    double currentPos = getPosition();
+    auto& markers = getMarkers();
+
+    int selectedMarker = 0;
+
+
+    double approx = 0.75;
+
+
+    for (int i = 0; i < markers.size(); ++i) {
+        double current = markers[i];
+
+        if (std::abs(currentPos - current) <= approx) {
+            selectedMarker = i + 1;
+            break;
+        }
+    }
+    return selectedMarker;
 }
