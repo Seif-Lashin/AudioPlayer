@@ -43,6 +43,19 @@ void PlayerAudio::prepareToPlay(int samplesPerBlockExpected, double sampleRate) 
 
 void PlayerAudio::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) {
     transportSource.getNextAudioBlock(bufferToFill);
+
+    float rms = 0.0f;
+    int cntChannels = bufferToFill.buffer->getNumChannels();
+    for (int channel = 0; channel < cntChannels; ++channel) {
+        rms += bufferToFill.buffer->getRMSLevel(channel, bufferToFill.startSample, bufferToFill.numSamples); //getRMSLevel gets the energy of the block
+    }
+
+    if (cntChannels > 0) {
+        rms /= (float)cntChannels;
+    }
+
+    float oldRMS = currentRMS.load(), decayRMS = oldRMS * 0.95f;
+    currentRMS.store(std::max(rms, decayRMS));
 }
 
 void PlayerAudio::releaseResources() {

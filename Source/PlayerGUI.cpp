@@ -79,14 +79,23 @@ PlayerGUI::~PlayerGUI()
 
 void PlayerGUI::paint(juce::Graphics& g)
 {
-    juce::Colour startColour = juce::Colours::black;
-    juce::Colour endColour = juce::Colours::crimson;
+
+    float rms = playerAudio.getRMS();
+    juce::Colour startColour = juce::Colours::purple;
+    juce::Colour endColour = juce::Colours::hotpink;
+    juce::Colour highlighter = juce::Colours::white;
+
+    float normalRMS = juce::jlimit(0.0f, 1.0f, rms * 5.0f);
+
+    juce::Colour NEWendColour = endColour.interpolatedWith(highlighter, normalRMS);
+    juce::Colour NewstartColour = startColour.interpolatedWith(highlighter, normalRMS);
+
 
     juce::ColourGradient gradient(
-        startColour,
+        NewstartColour,
         (float)getLocalBounds().getX(),
         (float)getLocalBounds().getY(),
-        endColour,
+        NEWendColour,
         (float)getLocalBounds().getRight(),
         (float)getLocalBounds().getY(),
         false
@@ -302,6 +311,8 @@ void PlayerGUI::timerCallback()
     {
         trackSlider.setValue(playerAudio.getPosition(), juce::dontSendNotification);
     }
+
+    repaint();
 }
 
 

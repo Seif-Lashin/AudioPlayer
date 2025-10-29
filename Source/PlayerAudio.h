@@ -14,6 +14,9 @@ private:
     float lastVolume = 0.5;
     std::vector<double> trackMarkers;
 
+    // responsible for background color adaptivness with the soundfile
+    std::atomic<float> currentRMS = 0.0f;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PlayerAudio)
 public:
 
@@ -44,14 +47,18 @@ public:
     // when last session is pressed
     juce::File retrievelastfile();
 
-
+    // Markers
     // add current position to marker list
     void addPositionAsMarker();
     // Referencing the list of markers to show
     const std::vector<double>& getMarkers() const;
     //clears current markers when file is no longer live
     void clearMarkers();
-
     void FindPlayback(juce::ComboBox* newcombobox, juce::ComboBox & markerList);
     void UpdateMarkerList(juce::ComboBox& markerList);
+
+
+    float getRMS() const { return currentRMS.load(); };
+
+
 };
