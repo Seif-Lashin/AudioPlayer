@@ -4,6 +4,7 @@
 
 class PlayerAudio : public juce::AudioSource{
 private:
+    juce::String currentTrackName;
     juce::AudioFormatManager formatManager;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
     std::unique_ptr<juce::PropertiesFile>history; // playeraudio owns its own settings file
@@ -44,7 +45,7 @@ public:
     void funToggle(bool shouldfun);
     bool getFunState() const;
     void mute(bool shouldMute);
-
+    juce::String getCurrentTrackName() const { return currentTrackName; }
     //when a new file is loaded
     void savecurrentfilepath(const juce::File& file);
     // when last session is pressed

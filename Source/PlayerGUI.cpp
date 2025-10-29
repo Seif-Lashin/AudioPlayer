@@ -17,6 +17,14 @@ PlayerGUI::PlayerGUI()
         addAndMakeVisible(btn);
     }
 
+
+    //title Logic
+    trackLabel.setText("No File Loaded", juce::dontSendNotification);
+    trackLabel.setJustificationType(juce::Justification::centred);
+    trackLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    trackLabel.setFont(juce::Font(30.0f, juce::Font::bold));
+    addAndMakeVisible(trackLabel);
+
     // Marker logic
     addAndMakeVisible(markerList);
     markerList.addListener(this);
@@ -136,6 +144,10 @@ void PlayerGUI::resized()
     currentY += buttonHeight + spacing;
     markerList.setBounds(rightX, currentY, rightClusterWidth, comboBoxHeight);
 
+
+    const int trackLabelHeight = 30;
+    trackLabel.setBounds(margin, margin, rightX - margin - spacing, trackLabelHeight);
+
    
     int bottomRowY = windowHeight - margin - buttonHeight;
 
@@ -217,8 +229,12 @@ void PlayerGUI::releaseResources()
 
 void PlayerGUI::buttonClicked(juce::Button* button)
 {
+
     if (button == &loadButton)
     {
+
+
+
         juce::FileChooser chooser("Select audio files...",
             juce::File{},
             "*.wav;*.mp3");
@@ -234,6 +250,9 @@ void PlayerGUI::buttonClicked(juce::Button* button)
             {
                 auto file = fc.getResult();
                 playerAudio.loadFile(file);
+
+                trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
+
 
                 //only set the range when loading a new file
                 trackSlider.setRange(0.0, playerAudio.getLength());
@@ -290,10 +309,16 @@ void PlayerGUI::buttonClicked(juce::Button* button)
         if (loadedfile.existsAsFile()) { // if it exists
             trackSlider.setRange(0.0, playerAudio.getLength()); // syncing the trackslider with the file
 
+
             // Also need to load the markers of the last session                         NOT DONE YET
             updateMarkerList();
+      
         }
+    
+        trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
+
     }
+
 
     if (button == &addMarker) {
         playerAudio.addPositionAsMarker();

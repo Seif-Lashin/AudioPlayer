@@ -69,6 +69,19 @@ void PlayerAudio::loadFile(const juce::File& file) {
             savecurrentfilepath(file);
             clearMarkers();
             
+            juce::String title = reader->metadataValues["title"];
+            juce::String artist = reader->metadataValues["artist"];
+
+            if (title.isNotEmpty() && artist.isNotEmpty()) {
+                currentTrackName = title + " - " + artist;
+            }
+            else if (title.isNotEmpty()) {
+                currentTrackName = title;
+            }
+            else {
+                currentTrackName = file.getFileName(); 
+            }
+             currentTrackName = file.getFileName();
 
             // clearing out the history
             history->setValue(key_lastPosition, 0.0);
@@ -218,6 +231,19 @@ juce::File PlayerAudio::retrievelastfile() {
                 transportSource.setSource(nullptr);
                 readerSource.reset();
 
+                juce::String title = reader->metadataValues["title"];
+                juce::String artist = reader->metadataValues["artist"];
+
+                if (title.isNotEmpty() && artist.isNotEmpty()) {
+                    currentTrackName = title + " - " + artist;
+                }
+                else if (title.isNotEmpty()) {
+                    currentTrackName = title;
+                }
+                else {
+                    currentTrackName = lastFile.getFileName(); // Fallback to filename
+                }
+
                 // Create new reader source
                 readerSource = std::make_unique<juce::AudioFormatReaderSource>(reader, true);
 
@@ -237,6 +263,7 @@ juce::File PlayerAudio::retrievelastfile() {
                                                       
         }
     }
+    currentTrackName = "No File Loaded Ya 7esba";
 
     return juce::File(); // returning a dummy file
 }
