@@ -244,6 +244,14 @@ juce::File PlayerAudio::retrievelastfile() {
 
 void PlayerAudio::addPositionAsMarker() {
     double current = getPosition();
+
+    for (double marker : trackMarkers) {
+        if (std::abs(marker - current) <= 0.01) {
+            return;
+        }
+    }
+
+
     trackMarkers.push_back(current);
     sort(trackMarkers.begin(), trackMarkers.end());
 }
@@ -289,4 +297,26 @@ void PlayerAudio::UpdateMarkerList(juce::ComboBox& markerList) {
         markerList.addItem(markerLabel, markerNumber);
         markerNumber++;
     }
+}
+
+// returns current marker that can be selected
+int PlayerAudio::markerChecker() {
+    double currentPos = getPosition();
+    auto& markers = getMarkers();
+
+    int selectedMarker = 0;
+
+
+    double approx = 0.75;
+
+
+    for (int i = 0; i < markers.size(); ++i) {
+        double current = markers[i];
+
+        if (std::abs(currentPos - current) <= approx) {
+            selectedMarker = i + 1;
+            break;
+        }
+    }
+    return selectedMarker;
 }

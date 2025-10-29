@@ -256,10 +256,12 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 
     if (button == &jumpForward) {
         playerAudio.plus10(playerAudio.getPosition());
+      // markerList.setSelectedId(0, juce::dontSendNotification);
     }
 
     if (button == &jumpBackward) {
         playerAudio.minus10(playerAudio.getPosition());
+       // markerList.setSelectedId(0, juce::dontSendNotification);
     }
 
     if (button == &repeatButton)
@@ -324,6 +326,11 @@ void PlayerGUI::timerCallback()
         trackSlider.setValue(playerAudio.getPosition(), juce::dontSendNotification);
     }
 
+    int markerIdToSelect = playerAudio.markerChecker();
+    int currentMarkerId = markerList.getSelectedId();
+    if (currentMarkerId != markerIdToSelect) {
+        markerList.setSelectedId(markerIdToSelect, juce::dontSendNotification);
+    }
     repaint();
 }
 

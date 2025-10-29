@@ -59,6 +59,7 @@ public:
     void clearMarkers();
     void FindPlayback(juce::ComboBox* newcombobox, juce::ComboBox & markerList);
     void UpdateMarkerList(juce::ComboBox& markerList);
+    int markerChecker();
 
 
     float getRMS() const { return currentRMS.load(); };
