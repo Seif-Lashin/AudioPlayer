@@ -14,6 +14,7 @@ private:
     bool isPlaying = true;
     float lastVolume = 0.5;
     std::vector<double> trackMarkers;
+    juce::AudioTransportSource transportSource;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PlayerAudio)
 public:
@@ -40,6 +41,10 @@ public:
 	void repeatToggle(bool shouldRepeat);
     void mute(bool shouldMute);
     juce::String getCurrentTrackName() const { return currentTrackName; }
+
+    // NEW: Accessor for the transport source to allow the GUI to listen
+    juce::AudioTransportSource& getTransportSource() { return transportSource; }
+
     //when a new file is loaded
     void savecurrentfilepath(const juce::File& file);
     // when last session is pressed
@@ -55,4 +60,6 @@ public:
 
     void FindPlayback(juce::ComboBox* newcombobox, juce::ComboBox & markerList);
     void UpdateMarkerList(juce::ComboBox& markerList);
+
+   
 };

@@ -31,6 +31,19 @@ PlayerGUI::PlayerGUI()
     markerList.setTextWhenNoChoicesAvailable("No Markers Available<3");
     markerList.setTextWhenNothingSelected("Select a Marker");
 
+    // New: Set up the playlist table
+    addAndMakeVisible(playlistTable);
+    playlistTable.setModel(this);
+    playlistTable.getHeader().addColumn("Track Title", 1, 300); // Column ID 1
+
+    // New: Register as a listener to the PlayerAudio's transport source
+    playerAudio.getTransportSource().addChangeListener(this);
+
+    // Set a reasonable default size (adjusted for the playlist table)
+    setSize(800, 450);
+    setAudioChannels(0, 2);
+    startTimer(60);
+
     // Volume slider
     volumeSlider.textFromValueFunction = [](double value) {//cahnging value to percentage
         double percent = value * 100;
@@ -81,6 +94,9 @@ PlayerGUI::PlayerGUI()
 
 PlayerGUI::~PlayerGUI()
 {
+    // New: Unregister as a listener
+    playerAudio.getTransportSource().removeChangeListener(this);
+
     shutdownAudio();
     setLookAndFeel(nullptr);
 }
@@ -117,10 +133,15 @@ void PlayerGUI::resized()
     const int smallButtonWidth = 80;
     const int sliderHeight = 20;
     const int comboBoxHeight = 30;
-    const int rightClusterWidth = 150; 
+    const int rightClusterWidth = 150;
 
 
     int currentY = margin;
+    int rightX = windowWidth - margin - rightClusterWidth;
+
+    // --- TOP RIGHT CONTROLS (Moved down to make room for the table) ---
+    const int rightClusterWidth = 150;
+    int topClusterY = margin;
     int rightX = windowWidth - margin - rightClusterWidth;
 
     lastSession.setBounds(rightX, currentY, rightClusterWidth, buttonHeight);
@@ -129,6 +150,17 @@ void PlayerGUI::resized()
     currentY += buttonHeight + spacing;
     markerList.setBounds(rightX, currentY, rightClusterWidth, comboBoxHeight);
 
+
+    // --- MAIN PLAYBACK CONTROLS AREA ---
+    int mainAreaWidth = rightX - spacing;
+
+    // Playlist Table takes up the top-left area (approx 1/3 of the height)
+    int playlistTableHeight = windowHeight / 3;
+    playlistTable.setBounds(margin, margin, mainAreaWidth - margin, playlistTableHeight);
+
+    // Track Label moved below the table
+    const int trackLabelHeight = 30;
+    trackLabel.setBounds(margin, margin + playlistTableHeight + spacing, mainAreaWidth - margin, trackLabelHeight);
 
     const int trackLabelHeight = 30;
     trackLabel.setBounds(margin, margin, rightX - margin - spacing, trackLabelHeight);
@@ -194,6 +226,29 @@ void PlayerGUI::resized()
 }
 
 
+
+
+// New Private Helper Method
+void PlayerGUI::loadTrack(int index)
+{
+    if (index >= 0 && index < playlist.size())
+    {
+        currentTrackIndex = index;
+        playerAudio.loadFile(playlist[currentTrackIndex]);
+
+        // Update GUI elements
+        trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
+        trackSlider.setRange(0.0, playerAudio.getLength());
+        updateMarkerList();
+
+        // Highlight the playing track in the table
+        playlistTable.selectRow(currentTrackIndex);
+
+        // Save the currently playing file as the last session file
+        playerAudio.savecurrentfilepath(playlist[currentTrackIndex]);
+    }
+}
+
 void PlayerGUI::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
     playerAudio.prepareToPlay(samplesPerBlockExpected, sampleRate);
@@ -215,33 +270,59 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     if (button == &loadButton)
     {
 
-
-
-        juce::FileChooser chooser("Select audio files...",
+        // New: FileChooser to select multiple files
+        juce::FileChooser chooser("Select audio files to create a playlist...",
             juce::File{},
             "*.wav;*.mp3");
 
-        fileChooser = std::make_unique<juce::FileChooser>(
-            "Select an audio file...",
-            juce::File{},
-            "*.wav;*.mp3");
-
-        fileChooser->launchAsync(
-            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+        // Use launchAsync with canSelectMultipleItems flag
+        chooser.launchAsync(
+            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles | juce::FileBrowserComponent::canSelectMultipleItems,
             [this](const juce::FileChooser& fc)
             {
-                auto file = fc.getResult();
-                playerAudio.loadFile(file);
+                auto results = fc.getResults();
 
-                trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
+                if (results.size() > 0)
+                {
+                    // Clear old playlist and add new results
+                    playlist.clear();
+                    playlist.addArray(results);
 
+                    // Reload the playlist table to show new tracks
+                    playlistTable.updateContent();
 
-                //only set the range when loading a new file
-                trackSlider.setRange(0.0, playerAudio.getLength());
-
-                // When loading a new file, update (clear) the marker list
-                updateMarkerList();
+                    // Automatically load the first track
+                    loadTrack(0);
+                }
             });
+    }
+
+
+    //juce::FileChooser chooser("Select audio files...",
+    //    juce::File{},
+    //    "*.wav;*.mp3");
+
+    //fileChooser = std::make_unique<juce::FileChooser>(
+    //    "Select an audio file...",
+    //    juce::File{},
+    //    "*.wav;*.mp3");
+
+    fileChooser->launchAsync(
+        juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+        [this](const juce::FileChooser& fc)
+        {
+            auto file = fc.getResult();
+            playerAudio.loadFile(file);
+
+            trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
+
+
+            //only set the range when loading a new file
+            trackSlider.setRange(0.0, playerAudio.getLength());
+
+            // When loading a new file, update (clear) the marker list
+            updateMarkerList();
+        });
     }
 
     if (button == &restartButton)
@@ -303,6 +384,86 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     }
 }
 
+// NEW: TableListBoxModel Implementation
+
+int PlayerGUI::getNumRows()
+{
+    return playlist.size();
+}
+
+void PlayerGUI::paintRowBackground(juce::Graphics& g, int rowNumber, int width, int height, bool rowIsSelected)
+{
+    juce::Colour colour = (rowIsSelected || rowNumber == currentTrackIndex)
+        ? juce::Colours::darkgrey.withAlpha(0.7f) // Highlight selected/playing track
+        : juce::Colours::grey.withAlpha(0.2f);
+
+    g.fillAll(colour);
+}
+
+// NEW: ChangeListener Implementation (For Track Transition)
+
+void PlayerGUI::changeListenerCallback(juce::ChangeBroadcaster* source)
+{
+    // Check if the change is from the AudioTransportSource
+    if (source == &playerAudio.getTransportSource())
+    {
+        // Check if the track has finished playing AND we have a valid playlist
+        if (playerAudio.getTransportSource().hasReachedEndOfStream() && playlist.size() > 0 && currentTrackIndex != -1)
+        {
+            // If repeat is toggled, restart the current track.
+            if (repeatButton.getToggleState())
+            {
+                loadTrack(currentTrackIndex); // Reloads the current track, restarting it from 0
+            }
+            else
+            {
+                // Advance to the next track (using modulo to loop back to the start)
+                int nextIndex = (currentTrackIndex + 1) % playlist.size();
+
+                // Only load the next track if the current index is NOT the last track in the list
+                if (nextIndex != 0 || playlist.size() == 1)
+                {
+                    loadTrack(nextIndex);
+                }
+                else
+                {
+                    // If we reached the end of the entire playlist, just stop.
+                    playerAudio.stop();
+                    currentTrackIndex = 0;
+                    playlistTable.selectRow(currentTrackIndex);
+                }
+            }
+        }
+    }
+}
+
+
+void PlayerGUI::paintCell(juce::Graphics& g, int rowNumber, int columnId, int width, int height, bool rowIsSelected)
+{
+    if (rowNumber < playlist.size() && columnId == 1) // ColumnId 1 is the "Track Title" column
+    {
+        juce::String filename = playlist[rowNumber].getFileNameWithoutExtension();
+
+        g.setColour(juce::Colours::white);
+        g.setFont(height * 0.7f);
+        g.drawText(filename,
+            2, 0, width - 4, height,
+            juce::Justification::centredLeft,
+            true);
+    }
+}
+
+void PlayerGUI::selectedRowsChanged(int lastRowSelected)
+{
+    // JUCE TableListBox does not have getSelectedNumRows().
+    // Instead, use getNumSelectedRows() to check if any rows are selected.
+    if (playlistTable.getNumSelectedRows() > 0)
+    {
+        int selectedRow = playlistTable.getSelectedRow(0);
+        loadTrack(selectedRow);
+    }
+}
+
 void PlayerGUI::sliderValueChanged(juce::Slider* slider)
 {
     if (slider == &volumeSlider)
@@ -330,7 +491,6 @@ void PlayerGUI::timerCallback()
 }
 
 
-// Responsible for finding the playback time of the marker and jumping to it.
 void PlayerGUI::comboBoxChanged(juce::ComboBox* newComboBox) {
     playerAudio.FindPlayback(newComboBox, markerList);
 }

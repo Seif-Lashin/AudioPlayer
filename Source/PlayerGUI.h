@@ -7,7 +7,11 @@ class PlayerGUI : public juce::AudioAppComponent,
     public juce::Button::Listener,
     public juce::Slider::Listener,
     public juce::Timer,
-    public juce::ComboBox::Listener
+    public juce::ComboBox::Listener,
+
+    public juce::TableListBoxModel,
+    public juce::ChangeListener
+
 {
 private:
     PlayerAudio playerAudio;
@@ -27,9 +31,26 @@ private:
     juce::Slider trackSlider;
     juce::Label trackLabel;
     std::unique_ptr<juce::FileChooser> fileChooser;
+    // Playlist members
+    juce::Array<juce::File> playlist;
+    juce::TableListBox playlistTable;
+    int currentTrackIndex = -1;
     
     void updateMarkerList();
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PlayerGUI)
+
+
+        // New: TableListBoxModel overrides
+        int getNumRows() override;
+    void paintRowBackground(juce::Graphics& g, int rowNumber, int width, int height, bool rowIsSelected) override;
+    void paintCell(juce::Graphics& g, int rowNumber, int columnId, int width, int height, bool rowIsSelected) override;
+    void selectedRowsChanged(int lastRowSelected) override;
+
+    // New: ChangeListener override
+    void changeListenerCallback(juce::ChangeBroadcaster* source) override;
+
+    // New: Private helper to load a track from the playlist
+    void loadTrack(int index);
 
 public:
     PlayerGUI();
