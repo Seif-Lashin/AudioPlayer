@@ -23,7 +23,9 @@ private:
     juce::TextButton jumpBackward{ "-10s" };
     juce::TextButton lastSession{ "Last Session" };
     juce::TextButton addMarker{ "Add Marker" };
+	juce::ToggleButton segmentButton{ "Segment" };
     juce::ComboBox markerList;
+    juce::Slider segmentSlider;
     juce::Slider volumeSlider;
     juce::Slider trackSlider;
     juce::Label trackLabel;

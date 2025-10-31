@@ -11,7 +11,7 @@ PlayerGUI::PlayerGUI()
         addAndMakeVisible(btn);
     }
 
-    for (auto* btn : { &repeatButton, &muteButton, &funButton }) //toggle buttons
+    for (auto* btn : { &repeatButton, &muteButton, &funButton, &segmentButton }) //toggle buttons
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -67,11 +67,18 @@ PlayerGUI::PlayerGUI()
     trackSlider.setRange(0.0, 1.0);
     trackSlider.setValue(0.0);
 
-    for (auto* sli : { &volumeSlider, &trackSlider }) //sliders
+    for (auto* sli : { &volumeSlider, &trackSlider, &segmentSlider}) //sliders
     {
         sli->addListener(this);
         addAndMakeVisible(sli);
     }
+	segmentSlider.setSliderStyle(juce::Slider::TwoValueHorizontal);
+    segmentSlider.setRange(0.0, 1.0);
+	segmentSlider.setMinValue(0.0);
+    segmentSlider.setMaxValue(1.0);
+	segmentSlider.setVisible(segmentButton.getToggleState());
+	playerAudio.setStart(0.0f);
+	playerAudio.setEnd(1.0f);
 
     // Set a reasonable default size
     setSize(800, 300);
@@ -166,6 +173,10 @@ void PlayerGUI::resized()
     currentX -= (smallButtonWidth + spacing);
     muteButton.setBounds(currentX, bottomRowY, smallButtonWidth, buttonHeight);
 
+	currentX -= (smallButtonWidth + spacing);
+	segmentButton.setBounds(currentX, bottomRowY, smallButtonWidth, buttonHeight);
+
+
     currentX -= (smallButtonWidth + spacing);;
     funButton.setBounds(currentX, bottomRowY, smallButtonWidth, buttonHeight);
 
@@ -209,6 +220,9 @@ void PlayerGUI::resized()
     int sliderY = bottomRowY - spacing - sliderHeight;
     int sliderWidth = mainAreaRightEdge - margin; 
     trackSlider.setBounds(margin, sliderY, sliderWidth, sliderHeight);
+
+	int sliderY2 = sliderY - spacing - sliderHeight;
+    segmentSlider.setBounds(margin, sliderY2, sliderWidth, sliderHeight);
 }
 
 
@@ -256,6 +270,11 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 
                 //only set the range when loading a new file
                 trackSlider.setRange(0.0, playerAudio.getLength());
+				segmentSlider.setRange(0.0, playerAudio.getLength());
+				segmentSlider.setMinValue(0.0);
+				segmentSlider.setMaxValue(playerAudio.getLength());
+				playerAudio.setStart(0.0f);
+				playerAudio.setEnd((float)playerAudio.getLength());
 
                 // When loading a new file, update (clear) the marker list
                 updateMarkerList();
@@ -275,12 +294,10 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 
     if (button == &jumpForward) {
         playerAudio.plus10(playerAudio.getPosition());
-      // markerList.setSelectedId(0, juce::dontSendNotification);
     }
 
     if (button == &jumpBackward) {
         playerAudio.minus10(playerAudio.getPosition());
-       // markerList.setSelectedId(0, juce::dontSendNotification);
     }
 
     if (button == &repeatButton)
@@ -308,21 +325,30 @@ void PlayerGUI::buttonClicked(juce::Button* button)
         juce::File loadedfile = playerAudio.retrievelastfile(); // getting the file
         if (loadedfile.existsAsFile()) { // if it exists
             trackSlider.setRange(0.0, playerAudio.getLength()); // syncing the trackslider with the file
-
-
+			
+            segmentSlider.setRange(0.0, playerAudio.getLength());
+			segmentSlider.setMinValue(0.0);
+			segmentSlider.setMaxValue(playerAudio.getLength());
             // Also need to load the markers of the last session                         NOT DONE YET
             updateMarkerList();
       
         }
-    
         trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
-
     }
 
 
     if (button == &addMarker) {
         playerAudio.addPositionAsMarker();
         updateMarkerList();
+    }
+
+    if (button == &segmentButton) {
+        playerAudio.SegmentToggle(segmentButton.getToggleState());
+        if (segmentButton.getToggleState() == false) {
+			segmentSlider.setMinValue(playerAudio.getStart());
+			segmentSlider.setMaxValue(playerAudio.getEnd());
+        }
+		segmentSlider.setVisible(segmentButton.getToggleState());
     }
 }
 
@@ -339,6 +365,10 @@ void PlayerGUI::sliderValueChanged(juce::Slider* slider)
             playerAudio.setPosition((float)slider->getValue());
         }
     }
+
+    if (slider == &segmentSlider) {
+		playerAudio.setSegment(segmentSlider.getMinValue(), segmentSlider.getMaxValue());
+    }
 }
 
 void PlayerGUI::timerCallback()
@@ -348,6 +378,9 @@ void PlayerGUI::timerCallback()
     // if they are currently dragging the slider.
     if (!trackSlider.isMouseButtonDown())
     {
+        if (segmentButton.getToggleState()) {
+            playerAudio.segmentPlayCheck();
+        }
         trackSlider.setValue(playerAudio.getPosition(), juce::dontSendNotification);
     }
 
