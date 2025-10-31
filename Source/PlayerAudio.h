@@ -14,8 +14,6 @@ private:
     bool isPlaying = true;
     float lastVolume = 0.5;
     std::vector<double> trackMarkers;
-    juce::AudioTransportSource transportSource;
-
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PlayerAudio)
 public:
 

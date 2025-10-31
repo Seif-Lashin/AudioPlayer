@@ -295,37 +295,47 @@ void PlayerGUI::buttonClicked(juce::Button* button)
                     loadTrack(0);
                 }
             });
+        fileChooser->launchAsync(
+            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+            [this](const juce::FileChooser& fc)
+            {
+                auto file = fc.getResult();
+                playerAudio.loadFile(file);
+
+                trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
+
+
+                //only set the range when loading a new file
+                trackSlider.setRange(0.0, playerAudio.getLength());
+
+                // When loading a new file, update (clear) the marker list
+                updateMarkerList();
+            });
+        fileChooser->launchAsync(
+            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+            [this](const juce::FileChooser& fc)
+            {
+                auto file = fc.getResult();
+                playerAudio.loadFile(file);
+
+                trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
+
+
+                //only set the range when loading a new file
+                trackSlider.setRange(0.0, playerAudio.getLength());
+
+                // When loading a new file, update (clear) the marker list
+                updateMarkerList();
+            });
     }
+    
+    
 
 
-    //juce::FileChooser chooser("Select audio files...",
-    //    juce::File{},
-    //    "*.wav;*.mp3");
 
-    //fileChooser = std::make_unique<juce::FileChooser>(
-    //    "Select an audio file...",
-    //    juce::File{},
-    //    "*.wav;*.mp3");
+   
 
-    fileChooser->launchAsync(
-        juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
-        [this](const juce::FileChooser& fc)
-        {
-            auto file = fc.getResult();
-            playerAudio.loadFile(file);
-
-            trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
-
-
-            //only set the range when loading a new file
-            trackSlider.setRange(0.0, playerAudio.getLength());
-
-            // When loading a new file, update (clear) the marker list
-            updateMarkerList();
-        });
-    }
-
-    if (button == &restartButton)
+    if(button == &restartButton)
     {
         playerAudio.Jumptostart();
         playerAudio.play();
@@ -364,7 +374,7 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 
     if (button == &lastSession) {
         juce::File loadedfile = playerAudio.retrievelastfile(); // getting the file
-        if (loadedfile.existsAsFile()) { // if it exists
+        if(loadedfile.existsAsFile()) { // if it exists
             trackSlider.setRange(0.0, playerAudio.getLength()); // syncing the trackslider with the file
 
 
@@ -408,7 +418,7 @@ void PlayerGUI::changeListenerCallback(juce::ChangeBroadcaster* source)
     if (source == &playerAudio.getTransportSource())
     {
         // Check if the track has finished playing AND we have a valid playlist
-        if (playerAudio.getTransportSource().hasReachedEndOfStream() && playlist.size() > 0 && currentTrackIndex != -1)
+        if (playerAudio.getTransportSource().getState() == juce::AudioTransportSource::Stopped && playlist.size() > 0 && currentTrackIndex != -1)
         {
             // If repeat is toggled, restart the current track.
             if (repeatButton.getToggleState())
@@ -421,7 +431,7 @@ void PlayerGUI::changeListenerCallback(juce::ChangeBroadcaster* source)
                 int nextIndex = (currentTrackIndex + 1) % playlist.size();
 
                 // Only load the next track if the current index is NOT the last track in the list
-                if (nextIndex != 0 || playlist.size() == 1)
+                if(nextIndex != 0 || playlist.size() == 1)
                 {
                     loadTrack(nextIndex);
                 }
@@ -440,7 +450,7 @@ void PlayerGUI::changeListenerCallback(juce::ChangeBroadcaster* source)
 
 void PlayerGUI::paintCell(juce::Graphics& g, int rowNumber, int columnId, int width, int height, bool rowIsSelected)
 {
-    if (rowNumber < playlist.size() && columnId == 1) // ColumnId 1 is the "Track Title" column
+    if(rowNumber < playlist.size() && columnId == 1) // ColumnId 1 is the "Track Title" column
     {
         juce::String filename = playlist[rowNumber].getFileNameWithoutExtension();
 
@@ -457,7 +467,7 @@ void PlayerGUI::selectedRowsChanged(int lastRowSelected)
 {
     // JUCE TableListBox does not have getSelectedNumRows().
     // Instead, use getNumSelectedRows() to check if any rows are selected.
-    if (playlistTable.getNumSelectedRows() > 0)
+    if(playlistTable.getNumSelectedRows() > 0)
     {
         int selectedRow = playlistTable.getSelectedRow(0);
         loadTrack(selectedRow);
@@ -466,13 +476,13 @@ void PlayerGUI::selectedRowsChanged(int lastRowSelected)
 
 void PlayerGUI::sliderValueChanged(juce::Slider* slider)
 {
-    if (slider == &volumeSlider)
+    if (slider == &volumeSlider) {
         playerAudio.setGain((float)slider->getValue());
-
+    }
     if (slider == &trackSlider)
     {
         // Only update position if the user is dragging the slider
-        if (slider->isMouseButtonDown())
+        if(slider->isMouseButtonDown())
         {
             playerAudio.setPosition((float)slider->getValue());
         }
