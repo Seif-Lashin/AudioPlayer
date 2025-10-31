@@ -64,6 +64,7 @@ public:
 
 
     float getRMS() const { return currentRMS.load(); };
+    bool IsPlaying()const;
 
 
 };

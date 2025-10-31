@@ -91,13 +91,21 @@ void PlayerGUI::paint(juce::Graphics& g)
     float rms = playerAudio.getRMS();
     juce::Colour startColour = juce::Colours::purple;
     juce::Colour endColour = juce::Colours::hotpink;
-
+   juce::Colour highlighter = juce::Colours::white;
     juce::Colour NewstartColour = startColour;
     juce::Colour NEWendColour = endColour;
 
     if (playerAudio.getFunState())
     {
-        juce::Colour highlighter = juce::Colours::black;
+        if (playerAudio.IsPlaying()) {
+        auto& random = juce::Random::getSystemRandom();
+
+        startColour = juce::Colour::fromHSV(random.nextFloat(), 1.0f, 1.0f, 1.0f); // hue, sat, brightness respectively
+        endColour = juce::Colour::fromHSV(random.nextFloat(), 1.0f, 1.0f, 1.0f);
+        highlighter = juce::Colour::fromHSV(random.nextFloat(), 1.0f, 1.0f, 1.0f);
+       }
+        
+      
         float normalRMS = juce::jlimit(0.0f, 1.0f, rms * 5.0f);
 
         NEWendColour = endColour.interpolatedWith(highlighter, normalRMS);
@@ -232,9 +240,6 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 
     if (button == &loadButton)
     {
-
-
-
         juce::FileChooser chooser("Select audio files...",
             juce::File{},
             "*.wav;*.mp3");

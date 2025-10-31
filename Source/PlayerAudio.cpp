@@ -347,3 +347,8 @@ int PlayerAudio::markerChecker() {
     }
     return selectedMarker;
 }
+
+
+bool PlayerAudio::IsPlaying() const {
+    return transportSource.isPlaying();
+}
