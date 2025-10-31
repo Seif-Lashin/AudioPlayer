@@ -54,6 +54,7 @@ void PlayerAudio::loadFile(const juce::File& file) {
     {
         if (auto* reader = formatManager.createReaderFor(file))
         {
+            juce::Logger::writeToLog("SUCCESS: Created reader for file: " + file.getFileName());
             savecurrentfilepath(file);
             clearMarkers();
             
@@ -98,6 +99,16 @@ void PlayerAudio::loadFile(const juce::File& file) {
             transportSource.setPosition(0.0); // ensuring it starts at 0.
             transportSource.start();
         }
+        else
+        {
+            // Failed to create reader!
+            juce::Logger::writeToLog("ERROR: Failed to create reader for file: " + file.getFileName());
+        }
+    }
+    else
+    {
+        juce::Logger::writeToLog("ERROR: File does not exist: " + file.getFileName());
+    
     }
 }
 

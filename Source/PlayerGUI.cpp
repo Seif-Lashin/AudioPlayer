@@ -140,9 +140,7 @@ void PlayerGUI::resized()
     int rightX = windowWidth - margin - rightClusterWidth;
 
     // --- TOP RIGHT CONTROLS (Moved down to make room for the table) ---
-    const int rightClusterWidth = 150;
     int topClusterY = margin;
-    int rightX = windowWidth - margin - rightClusterWidth;
 
     lastSession.setBounds(rightX, currentY, rightClusterWidth, buttonHeight);
     currentY += buttonHeight + spacing;
@@ -159,8 +157,8 @@ void PlayerGUI::resized()
     playlistTable.setBounds(margin, margin, mainAreaWidth - margin, playlistTableHeight);
 
     // Track Label moved below the table
-    const int trackLabelHeight = 30;
-    trackLabel.setBounds(margin, margin + playlistTableHeight + spacing, mainAreaWidth - margin, trackLabelHeight);
+    /*const int trackLabelHeight = 30;
+    trackLabel.setBounds(margin, margin + playlistTableHeight + spacing, mainAreaWidth - margin, trackLabelHeight);*/
 
     const int trackLabelHeight = 30;
     trackLabel.setBounds(margin, margin, rightX - margin - spacing, trackLabelHeight);
@@ -271,12 +269,14 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     {
 
         // New: FileChooser to select multiple files
-        juce::FileChooser chooser("Select audio files to create a playlist...",
+        fileChooser = std::make_unique<juce::FileChooser>(
+            "Select audio files to create a playlist...",
             juce::File{},
-            "*.wav;*.mp3");
+            "*.wav;*.mp3"
+        );
 
         // Use launchAsync with canSelectMultipleItems flag
-        chooser.launchAsync(
+        fileChooser->launchAsync(
             juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles | juce::FileBrowserComponent::canSelectMultipleItems,
             [this](const juce::FileChooser& fc)
             {
@@ -294,47 +294,12 @@ void PlayerGUI::buttonClicked(juce::Button* button)
                     // Automatically load the first track
                     loadTrack(0);
                 }
-            });
-        fileChooser->launchAsync(
-            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
-            [this](const juce::FileChooser& fc)
-            {
-                auto file = fc.getResult();
-                playerAudio.loadFile(file);
 
-                trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
+                fileChooser.reset(); fileChooser.reset();
 
-
-                //only set the range when loading a new file
-                trackSlider.setRange(0.0, playerAudio.getLength());
-
-                // When loading a new file, update (clear) the marker list
-                updateMarkerList();
-            });
-        fileChooser->launchAsync(
-            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
-            [this](const juce::FileChooser& fc)
-            {
-                auto file = fc.getResult();
-                playerAudio.loadFile(file);
-
-                trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
-
-
-                //only set the range when loading a new file
-                trackSlider.setRange(0.0, playerAudio.getLength());
-
-                // When loading a new file, update (clear) the marker list
-                updateMarkerList();
             });
     }
-    
-    
-
-
-
-   
-
+       
     if(button == &restartButton)
     {
         playerAudio.Jumptostart();
@@ -418,29 +383,31 @@ void PlayerGUI::changeListenerCallback(juce::ChangeBroadcaster* source)
     if (source == &playerAudio.getTransportSource())
     {
         // Check if the track has finished playing AND we have a valid playlist
-        if (playerAudio.getTransportSource().getState() == juce::AudioTransportSource::Stopped && playlist.size() > 0 && currentTrackIndex != -1)
+        if (!playerAudio.getTransportSource().isPlaying() && playerAudio.getTransportSource().getCurrentPosition() == 0.0 && playlist.size() > 0 && currentTrackIndex != -1)
         {
             // If repeat is toggled, restart the current track.
             if (repeatButton.getToggleState())
             {
                 loadTrack(currentTrackIndex); // Reloads the current track, restarting it from 0
+                playerAudio.play();
             }
             else
             {
-                // Advance to the next track (using modulo to loop back to the start)
-                int nextIndex = (currentTrackIndex + 1) % playlist.size();
+                // CORRECTED LOGIC: Advance to the next track using simple increment
+                int nextIndex = currentTrackIndex + 1;
 
-                // Only load the next track if the current index is NOT the last track in the list
-                if(nextIndex != 0 || playlist.size() == 1)
+                if (nextIndex < playlist.size())
                 {
-                    loadTrack(nextIndex);
+                    loadTrack(nextIndex); // Load next track and start playing
+                    playerAudio.play();
                 }
                 else
                 {
-                    // If we reached the end of the entire playlist, just stop.
+                    // If we reached the end of the entire playlist, stop.
                     playerAudio.stop();
-                    currentTrackIndex = 0;
-                    playlistTable.selectRow(currentTrackIndex);
+                    currentTrackIndex = -1; // Reset to no track selected
+                    playlistTable.deselectAllRows();
+                    trackLabel.setText("Playlist Finished", juce::dontSendNotification);
                 }
             }
         }
