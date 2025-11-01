@@ -67,23 +67,7 @@ PlayerGUI::PlayerGUI()
     trackSlider.setRange(0.0, 1.0);
     trackSlider.setValue(0.0);
 
-    addAndMakeVisible(speedLabel);
-    speedLabel.setText("Speed:", juce::dontSendNotification);
-    speedLabel.setJustificationType(juce::Justification::centredRight);
-
-    speedSlider.setRange(0.5, 2.0, 0.01); // From half-speed to double-speed
-    speedSlider.setValue(1.0);
-    speedSlider.setSkewFactorFromMidPoint(1.0); // Makes 1.0x the center of the slider
-    speedSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 50, 20);
-    speedSlider.textFromValueFunction = [](double value) { return juce::String(value, 2) + "x"; };
-    speedSlider.valueFromTextFunction = [](const juce::String& text) { return text.removeCharacters("x").getDoubleValue(); };
-
-
-
-
-
-    for (auto* sli : { &volumeSlider, &trackSlider, &segmentSlider, &speedSlider}) //sliders
-
+    for (auto* sli : { &volumeSlider, &trackSlider, &segmentSlider}) //sliders
     {
         sli->addListener(this);
         addAndMakeVisible(sli);
@@ -114,21 +98,13 @@ void PlayerGUI::paint(juce::Graphics& g)
     float rms = playerAudio.getRMS();
     juce::Colour startColour = juce::Colours::purple;
     juce::Colour endColour = juce::Colours::hotpink;
-   juce::Colour highlighter = juce::Colours::white;
+
     juce::Colour NewstartColour = startColour;
     juce::Colour NEWendColour = endColour;
 
     if (playerAudio.getFunState())
     {
-        if (playerAudio.IsPlaying()) {
-        auto& random = juce::Random::getSystemRandom();
-
-        startColour = juce::Colour::fromHSV(random.nextFloat(), 1.0f, 1.0f, 1.0f); // hue, sat, brightness respectively
-        endColour = juce::Colour::fromHSV(random.nextFloat(), 1.0f, 1.0f, 1.0f);
-        highlighter = juce::Colour::fromHSV(random.nextFloat(), 1.0f, 1.0f, 1.0f);
-       }
-        
-      
+        juce::Colour highlighter = juce::Colours::black;
         float normalRMS = juce::jlimit(0.0f, 1.0f, rms * 5.0f);
 
         NEWendColour = endColour.interpolatedWith(highlighter, normalRMS);
@@ -241,37 +217,12 @@ void PlayerGUI::resized()
     }
 
     
-    
-    int sliderWidth = mainAreaRightEdge - margin; 
-    int speedLabelWidth = 60;
     int sliderY = bottomRowY - spacing - sliderHeight;
+    int sliderWidth = mainAreaRightEdge - margin; 
     trackSlider.setBounds(margin, sliderY, sliderWidth, sliderHeight);
-
-
-    int speedSliderY = sliderY - sliderHeight - spacing - margin * 2;
-    speedLabel.setBounds(margin, speedSliderY, speedLabelWidth, sliderHeight);
-    speedSlider.setBounds(margin + speedLabelWidth + spacing, speedSliderY, sliderWidth - speedLabelWidth - spacing, sliderHeight);
 
 	int sliderY2 = sliderY - spacing - sliderHeight;
     segmentSlider.setBounds(margin, sliderY2, sliderWidth, sliderHeight);
-
-}
-
-void PlayerGUI::updateGUI() {
-    double trackLength = playerAudio.getLength();
-    trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
-    trackSlider.setRange(0.0, trackLength);
-    trackSlider.setValue(playerAudio.getPosition(), juce::dontSendNotification);
-    speedSlider.setValue(1.0, juce::dontSendNotification);
-
-    segmentSlider.setRange(0.0, trackLength);
-    segmentSlider.setMinValue(0.0);
-    segmentSlider.setMaxValue(trackLength);
-
-    playerAudio.setStart(0.0f);
-    playerAudio.setEnd((float)trackLength);
-    updateMarkerList();
-
 }
 
 
@@ -295,6 +246,9 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 
     if (button == &loadButton)
     {
+
+
+
         juce::FileChooser chooser("Select audio files...",
             juce::File{},
             "*.wav;*.mp3");
@@ -311,7 +265,19 @@ void PlayerGUI::buttonClicked(juce::Button* button)
                 auto file = fc.getResult();
                 playerAudio.loadFile(file);
 
-                updateGUI();
+                trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
+
+
+                //only set the range when loading a new file
+                trackSlider.setRange(0.0, playerAudio.getLength());
+				segmentSlider.setRange(0.0, playerAudio.getLength());
+				segmentSlider.setMinValue(0.0);
+				segmentSlider.setMaxValue(playerAudio.getLength());
+				playerAudio.setStart(0.0f);
+				playerAudio.setEnd((float)playerAudio.getLength());
+
+                // When loading a new file, update (clear) the marker list
+                updateMarkerList();
             });
     }
 
@@ -334,19 +300,20 @@ void PlayerGUI::buttonClicked(juce::Button* button)
         playerAudio.minus10(playerAudio.getPosition());
     }
 
-    if (button == &repeatButton){
+    if (button == &repeatButton)
+    {
         playerAudio.repeatToggle(repeatButton.getToggleState());
     }
-
     if (button == &funButton) {
         playerAudio.funToggle(funButton.getToggleState());
     }
 
-    if (button == &endButton){
+    if (button == &endButton)
+    {
         playerAudio.Jumptoend();
     }
-
-    if (button == &playButton){
+    if (button == &playButton)
+    {
         playerAudio.play();
     }
 
@@ -356,7 +323,17 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 
     if (button == &lastSession) {
         juce::File loadedfile = playerAudio.retrievelastfile(); // getting the file
-        updateGUI();
+        if (loadedfile.existsAsFile()) { // if it exists
+            trackSlider.setRange(0.0, playerAudio.getLength()); // syncing the trackslider with the file
+			
+            segmentSlider.setRange(0.0, playerAudio.getLength());
+			segmentSlider.setMinValue(0.0);
+			segmentSlider.setMaxValue(playerAudio.getLength());
+            // Also need to load the markers of the last session                         NOT DONE YET
+            updateMarkerList();
+      
+        }
+        trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
     }
 
 
@@ -389,17 +366,13 @@ void PlayerGUI::sliderValueChanged(juce::Slider* slider)
         }
     }
 
-    if (slider == &speedSlider)
-    {
-        playerAudio.setSpeed(slider->getValue());
-    }
     if (slider == &segmentSlider) {
 		playerAudio.setSegment(segmentSlider.getMinValue(), segmentSlider.getMaxValue());
-
     }
 }
 
-void PlayerGUI::timerCallback(){
+void PlayerGUI::timerCallback()
+{
     // This timer callback automatically updates the slider's visual position.
     // We check !isMouseButtonDown() to prevent "fighting" with the user
     // if they are currently dragging the slider.
