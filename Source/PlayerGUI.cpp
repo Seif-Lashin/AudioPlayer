@@ -5,7 +5,7 @@ PlayerGUI::PlayerGUI()
 {
     // Add buttons
     for (auto* btn : { &loadButton, &restartButton , &stopButton, &jumpForward, &jumpBackward,
-         &endButton, &playButton, &lastSession, &addMarker })//text buttons
+         &endButton, &playButton, &addMarker })//text buttons
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -19,7 +19,7 @@ PlayerGUI::PlayerGUI()
 
 
     //title Logic
-    trackLabel.setText("No File Loaded", juce::dontSendNotification);
+    trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
     trackLabel.setJustificationType(juce::Justification::centred);
     trackLabel.setColour(juce::Label::textColourId, juce::Colours::white);
     trackLabel.setFont(juce::Font(30.0f, juce::Font::bold));
@@ -64,7 +64,7 @@ PlayerGUI::PlayerGUI()
         }
         return text.getDoubleValue();
         };
-    trackSlider.setRange(0.0, 1.0);
+    trackSlider.setRange(0.0, playerAudio.getLength());
     trackSlider.setValue(0.0);
 
     for (auto* sli : { &volumeSlider, &trackSlider, &segmentSlider}) //sliders
@@ -73,12 +73,12 @@ PlayerGUI::PlayerGUI()
         addAndMakeVisible(sli);
     }
 	segmentSlider.setSliderStyle(juce::Slider::TwoValueHorizontal);
-    segmentSlider.setRange(0.0, 1.0);
+    segmentSlider.setRange(0.0, playerAudio.getLength());
 	segmentSlider.setMinValue(0.0);
-    segmentSlider.setMaxValue(1.0);
+    segmentSlider.setMaxValue(playerAudio.getLength());
 	segmentSlider.setVisible(segmentButton.getToggleState());
 	playerAudio.setStart(0.0f);
-	playerAudio.setEnd(1.0f);
+	playerAudio.setEnd(playerAudio.getEnd());
 
     // Set a reasonable default size
     setSize(800, 300);
@@ -145,7 +145,6 @@ void PlayerGUI::resized()
     int currentY = margin;
     int rightX = windowWidth - margin - rightClusterWidth;
 
-    lastSession.setBounds(rightX, currentY, rightClusterWidth, buttonHeight);
     currentY += buttonHeight + spacing;
     addMarker.setBounds(rightX, currentY, rightClusterWidth, buttonHeight);
     currentY += buttonHeight + spacing;
@@ -216,7 +215,8 @@ void PlayerGUI::resized()
         }
     }
 
-    
+    int sliderWidth = mainAreaRightEdge - margin;
+    int speedLabelWidth = 60;
     int sliderY = bottomRowY - spacing - sliderHeight;
     int sliderWidth = mainAreaRightEdge - margin; 
     trackSlider.setBounds(margin, sliderY, sliderWidth, sliderHeight);
@@ -320,22 +320,6 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     if (button == &muteButton) {
         playerAudio.mute(muteButton.getToggleState());
     }
-
-    if (button == &lastSession) {
-        juce::File loadedfile = playerAudio.retrievelastfile(); // getting the file
-        if (loadedfile.existsAsFile()) { // if it exists
-            trackSlider.setRange(0.0, playerAudio.getLength()); // syncing the trackslider with the file
-			
-            segmentSlider.setRange(0.0, playerAudio.getLength());
-			segmentSlider.setMinValue(0.0);
-			segmentSlider.setMaxValue(playerAudio.getLength());
-            // Also need to load the markers of the last session                         NOT DONE YET
-            updateMarkerList();
-      
-        }
-        trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
-    }
-
 
     if (button == &addMarker) {
         playerAudio.addPositionAsMarker();

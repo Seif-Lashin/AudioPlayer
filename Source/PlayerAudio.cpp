@@ -24,7 +24,8 @@ PlayerAudio::PlayerAudio()
 
     //creating the PropertiesFile object and store it in our pointer
     history = std::make_unique<juce::PropertiesFile>(settingsfile, options); 
-    
+	currentTrackName = "No Track Loaded";
+	retrievelastfile(); // trying to retrieve last session file
 }
 
 PlayerAudio::~PlayerAudio() {
@@ -44,7 +45,7 @@ void PlayerAudio::prepareToPlay(int samplesPerBlockExpected, double sampleRate) 
 }
 
 void PlayerAudio::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) {
-    transportSource.getNextAudioBlock(bufferToFill);
+    resamplingSource.getNextAudioBlock(bufferToFill);
 
     float rms = 0.0f;
     int cntChannels = bufferToFill.buffer->getNumChannels();
@@ -62,6 +63,7 @@ void PlayerAudio::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferTo
 
 void PlayerAudio::releaseResources() {
     transportSource.releaseResources();
+    resamplingSource->releaseResources();
 }
 
 void PlayerAudio::loadFile(const juce::File& file) {
@@ -71,9 +73,9 @@ void PlayerAudio::loadFile(const juce::File& file) {
         {
             savecurrentfilepath(file);
             clearMarkers();
-            
+
             //metadata extraction using taglib
-			getMetadata(file);
+            getMetadata(file);
 
             // clearing out the history
             history->setValue(key_lastPosition, 0.0);
@@ -106,7 +108,6 @@ void PlayerAudio::loadFile(const juce::File& file) {
         }
     }
 }
-
 
 void PlayerAudio::play() {
     isPlaying = true;
@@ -165,11 +166,11 @@ double PlayerAudio::getPosition() const {
 }
 
 double PlayerAudio::getLength() const {
+    if (readerSource == nullptr) return 1;
     return transportSource.getLengthInSeconds();
 }
 
 void PlayerAudio::repeatToggle(bool shouldRepeat) {
-
     islooping = shouldRepeat; //changing the state of islooping depending on button
     if (readerSource != nullptr) {
         auto cPos = getPosition();
@@ -204,6 +205,19 @@ void PlayerAudio::mute(bool shouldMute) {
     }
 }
 
+juce::File PlayerAudio::retrievelastfile() {
+    juce::String lastfilepath = history->getValue(key, juce::String()); // getting the filepath from our history
+    if (lastfilepath.isNotEmpty()) {       // if the path isn't empty
+        juce::File lastFile(lastfilepath);// we get the file in it
+        double lastPos = history->getDoubleValue(key_lastPosition, 0.0);
+        loadFile(lastFile);              // loading the file
+        setPosition(lastPos);            // setting the last position
+        return lastFile;
+    }
+    else {
+        return juce::File();
+    }
+}
 
 void PlayerAudio::savecurrentfilepath(const juce::File& file) {
     juce::String filepath = file.getFullPathName();  // saving the current file path
@@ -212,68 +226,13 @@ void PlayerAudio::savecurrentfilepath(const juce::File& file) {
     history->saveIfNeeded();             // forcing the save.
 }
 
-juce::File PlayerAudio::retrievelastfile() {
-    juce::String lastfilepath = history->getValue(key, juce::String()); // getting the filepath from our history
-
-    if (lastfilepath.isNotEmpty()) {       // if the path isn't empty
-        juce::File lastFile(lastfilepath);// we get the file in it
-
-        if (lastFile.existsAsFile()) {       // if the file exists
-            if (auto* reader = formatManager.createReaderFor(lastFile)) {   // attempts to create an audio-reader for the file
-
-                transportSource.stop();
-                transportSource.setSource(nullptr);
-                readerSource.reset();
-
-                juce::String title = reader->metadataValues["title"];
-                juce::String artist = reader->metadataValues["artist"];
-
-                if (title.isNotEmpty() && artist.isNotEmpty()) {
-                    currentTrackName = title + " - " + artist;
-                }
-                else if (title.isNotEmpty()) {
-                    currentTrackName = title;
-                }
-                else {
-                    currentTrackName = lastFile.getFileName(); // Fallback to filename
-                }
-
-                // Create new reader source
-                readerSource = std::make_unique<juce::AudioFormatReaderSource>(reader, true);
-
-               
-                transportSource.setSource(readerSource.get(), 0, nullptr, reader->sampleRate);
-
-                start = 0;
-				end = getLength();
-                //getting the saved position, if none its 0.0
-                double lastPos = history->getDoubleValue(key_lastPosition, 0.0);   
-                transportSource.setPosition(lastPos);
-                transportSource.start();
-
-
-                return lastFile;   // return it
-            }
-
-                                                      
-        }
-    }
-    currentTrackName = "No File Loaded Ya 7esba";
-
-    return juce::File(); // returning a dummy file
-}
-
-
 void PlayerAudio::addPositionAsMarker() {
     double current = getPosition();
-
     for (double marker : trackMarkers) {
         if (std::abs(marker - current) <= 0.01) {
             return;
         }
     }
-
-
     trackMarkers.push_back(current);
     sort(trackMarkers.begin(), trackMarkers.end());
 }
@@ -325,13 +284,8 @@ void PlayerAudio::UpdateMarkerList(juce::ComboBox& markerList) {
 int PlayerAudio::markerChecker() {
     double currentPos = getPosition();
     auto& markers = getMarkers();
-
     int selectedMarker = 0;
-
-
     double approx = 0.75;
-
-
     for (int i = 0; i < markers.size(); ++i) {
         double current = markers[i];
 
@@ -395,4 +349,8 @@ void PlayerAudio::getMetadata(const juce::File& file) {
         else currentTrackName = file.getFileNameWithoutExtension();
     }
     else currentTrackName = file.getFileNameWithoutExtension();
+}
+
+juce::String PlayerAudio::getCurrentTrackName() {
+    return currentTrackName;
 }
