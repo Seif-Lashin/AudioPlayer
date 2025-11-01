@@ -10,6 +10,8 @@ class PlayerGUI : public juce::AudioAppComponent,
     public juce::ComboBox::Listener
 {
 private:
+    void updateGUI();
+ 
     PlayerAudio playerAudio;
     juce::TextButton loadButton{ "Load File" };
     juce::TextButton restartButton{ "Start" };
@@ -28,7 +30,10 @@ private:
     juce::Slider segmentSlider;
     juce::Slider volumeSlider;
     juce::Slider trackSlider;
+    juce::Slider speedSlider;
+    juce::Label speedLabel;
     juce::Label trackLabel;
+
     std::unique_ptr<juce::FileChooser> fileChooser;
     
     void updateMarkerList();
