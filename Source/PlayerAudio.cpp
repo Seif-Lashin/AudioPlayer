@@ -1,4 +1,4 @@
-﻿#include "PlayerAudio.h"
+#include "PlayerAudio.h"
 #include <cmath>
 
 // edited this part to take properties file
