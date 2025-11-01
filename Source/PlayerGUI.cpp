@@ -67,7 +67,22 @@ PlayerGUI::PlayerGUI()
     trackSlider.setRange(0.0, 1.0);
     trackSlider.setValue(0.0);
 
-    for (auto* sli : { &volumeSlider, &trackSlider }) //sliders
+
+
+    addAndMakeVisible(speedLabel);
+    speedLabel.setText("Speed:", juce::dontSendNotification);
+    speedLabel.setJustificationType(juce::Justification::centredRight);
+
+    speedSlider.setRange(0.5, 2.0, 0.01); // From half-speed to double-speed
+    speedSlider.setValue(1.0);
+    speedSlider.setSkewFactorFromMidPoint(1.0); // Makes 1.0x the center of the slider
+    speedSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 50, 20);
+    speedSlider.textFromValueFunction = [](double value) { return juce::String(value, 2) + "x"; };
+    speedSlider.valueFromTextFunction = [](const juce::String& text) { return text.removeCharacters("x").getDoubleValue(); };
+
+
+
+    for (auto* sli : { &volumeSlider, &trackSlider, &speedSlider }) //sliders
     {
         sli->addListener(this);
         addAndMakeVisible(sli);
@@ -214,9 +229,15 @@ void PlayerGUI::resized()
     }
 
     
-    int sliderY = bottomRowY - spacing - sliderHeight;
+    
     int sliderWidth = mainAreaRightEdge - margin; 
+    int speedLabelWidth = 60;
+    int sliderY = bottomRowY - spacing - sliderHeight;
     trackSlider.setBounds(margin, sliderY, sliderWidth, sliderHeight);
+
+    int speedSliderY = sliderY - sliderHeight - spacing;
+    speedLabel.setBounds(margin, speedSliderY, speedLabelWidth, sliderHeight);
+    speedSlider.setBounds(margin + speedLabelWidth + spacing, speedSliderY, sliderWidth - speedLabelWidth - spacing, sliderHeight);
 }
 
 
@@ -261,6 +282,7 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 
                 //only set the range when loading a new file
                 trackSlider.setRange(0.0, playerAudio.getLength());
+                speedSlider.setValue(1.0, juce::dontSendNotification);
 
                 // When loading a new file, update (clear) the marker list
                 updateMarkerList();
@@ -280,28 +302,25 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 
     if (button == &jumpForward) {
         playerAudio.plus10(playerAudio.getPosition());
-      // markerList.setSelectedId(0, juce::dontSendNotification);
     }
 
     if (button == &jumpBackward) {
         playerAudio.minus10(playerAudio.getPosition());
-       // markerList.setSelectedId(0, juce::dontSendNotification);
     }
 
-    if (button == &repeatButton)
-    {
+    if (button == &repeatButton){
         playerAudio.repeatToggle(repeatButton.getToggleState());
     }
+
     if (button == &funButton) {
         playerAudio.funToggle(funButton.getToggleState());
     }
 
-    if (button == &endButton)
-    {
+    if (button == &endButton){
         playerAudio.Jumptoend();
     }
-    if (button == &playButton)
-    {
+
+    if (button == &playButton){
         playerAudio.play();
     }
 
@@ -313,7 +332,7 @@ void PlayerGUI::buttonClicked(juce::Button* button)
         juce::File loadedfile = playerAudio.retrievelastfile(); // getting the file
         if (loadedfile.existsAsFile()) { // if it exists
             trackSlider.setRange(0.0, playerAudio.getLength()); // syncing the trackslider with the file
-
+            speedSlider.setValue(1.0, juce::dontSendNotification);
 
             // Also need to load the markers of the last session                         NOT DONE YET
             updateMarkerList();
@@ -343,6 +362,11 @@ void PlayerGUI::sliderValueChanged(juce::Slider* slider)
         {
             playerAudio.setPosition((float)slider->getValue());
         }
+    }
+
+    if (slider == &speedSlider)
+    {
+        playerAudio.setSpeed(slider->getValue());
     }
 }
 

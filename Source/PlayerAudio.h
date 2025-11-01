@@ -19,6 +19,9 @@ private:
     // responsible for background color adaptivness with the soundfile
     std::atomic<float> currentRMS = 0.0f;
 
+    std::unique_ptr<juce::ResamplingAudioSource> resamplingSource;
+    double currentSampleRate = 0.0;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PlayerAudio)
 public:
 
@@ -65,6 +68,9 @@ public:
 
     float getRMS() const { return currentRMS.load(); };
     bool IsPlaying()const;
+
+
+    void setSpeed(double ratio);
 
 
 };

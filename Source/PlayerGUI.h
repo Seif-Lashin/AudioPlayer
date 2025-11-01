@@ -26,7 +26,10 @@ private:
     juce::ComboBox markerList;
     juce::Slider volumeSlider;
     juce::Slider trackSlider;
+    juce::Slider speedSlider;
+    juce::Label speedLabel;
     juce::Label trackLabel;
+
     std::unique_ptr<juce::FileChooser> fileChooser;
     
     void updateMarkerList();

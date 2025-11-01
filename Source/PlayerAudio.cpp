@@ -9,6 +9,8 @@ PlayerAudio::PlayerAudio()
 {
     formatManager.registerBasicFormats();
 
+    resamplingSource = std::make_unique<juce::ResamplingAudioSource>(&transportSource, false);
+
     // preparing the system file
     juce::PropertiesFile::Options options;
     options.applicationName = "Simple Audio Player";
@@ -37,11 +39,13 @@ PlayerAudio::~PlayerAudio() {
 }
 
 void PlayerAudio::prepareToPlay(int samplesPerBlockExpected, double sampleRate) {
+    currentSampleRate = sampleRate;
     transportSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
+    resamplingSource->prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
 
 void PlayerAudio::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) {
-    transportSource.getNextAudioBlock(bufferToFill);
+    resamplingSource->getNextAudioBlock(bufferToFill);
 
     float rms = 0.0f;
     int cntChannels = bufferToFill.buffer->getNumChannels();
@@ -59,6 +63,7 @@ void PlayerAudio::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferTo
 
 void PlayerAudio::releaseResources() {
     transportSource.releaseResources();
+    resamplingSource->releaseResources();
 }
 
 void PlayerAudio::loadFile(const juce::File& file) {
@@ -108,6 +113,8 @@ void PlayerAudio::loadFile(const juce::File& file) {
 
 
             transportSource.setPosition(0.0); // ensuring it starts at 0.
+
+            setSpeed(1.0);
             transportSource.start();
         }
     }
@@ -254,6 +261,8 @@ juce::File PlayerAudio::retrievelastfile() {
                 //getting the saved position, if none its 0.0
                 double lastPos = history->getDoubleValue(key_lastPosition, 0.0);   
                 transportSource.setPosition(lastPos);
+
+                setSpeed(1.0);
                 transportSource.start();
 
 
@@ -351,4 +360,11 @@ int PlayerAudio::markerChecker() {
 
 bool PlayerAudio::IsPlaying() const {
     return transportSource.isPlaying();
+}
+
+
+void PlayerAudio::setSpeed(double ratio) {
+    if (resamplingSource != nullptr) {
+        resamplingSource->setResamplingRatio(ratio);
+    }
 }
