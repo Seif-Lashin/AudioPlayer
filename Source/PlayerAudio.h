@@ -6,9 +6,10 @@ class PlayerAudio : public juce::AudioSource{
 private:
     juce::String currentTrackName;
     juce::AudioFormatManager formatManager;
+    juce::AudioTransportSource transportSource;
+    juce::StringPairArray trackMetadata;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
     std::unique_ptr<juce::PropertiesFile>history; // playeraudio owns its own settings file
-    juce::AudioTransportSource transportSource;
     bool islooping = false;
     bool ismuted = false;
     bool isPlaying = true;
@@ -38,6 +39,9 @@ public:
     double getLength() const;
 	void repeatToggle(bool shouldRepeat);
     void mute(bool shouldMute);
+    const juce::StringPairArray& getMetadata() const { return trackMetadata; }
+
+    
     juce::String getCurrentTrackName() const { return currentTrackName; }
 
     // NEW: Accessor for the transport source to allow the GUI to listen

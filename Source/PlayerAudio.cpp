@@ -54,6 +54,19 @@ void PlayerAudio::loadFile(const juce::File& file) {
     {
         if (auto* reader = formatManager.createReaderFor(file))
         {
+
+            trackMetadata = reader->metadataValues;
+
+            // Try to find a good track name in the metadata, otherwise use the filename
+            currentTrackName = trackMetadata.getValue("Title", file.getFileNameWithoutExtension());
+
+            // This handles older, sometimes supported metadata keys.
+            if (currentTrackName == file.getFileNameWithoutExtension())
+                currentTrackName = trackMetadata.getValue("SongName", file.getFileNameWithoutExtension());
+
+            if (currentTrackName == file.getFileNameWithoutExtension())
+                currentTrackName = trackMetadata.getValue("name", file.getFileNameWithoutExtension());
+
             juce::Logger::writeToLog("SUCCESS: Created reader for file: " + file.getFileName());
             savecurrentfilepath(file);
             clearMarkers();
@@ -94,6 +107,8 @@ void PlayerAudio::loadFile(const juce::File& file) {
                 0,
                 nullptr,
                 reader->sampleRate);
+            
+           // readerSource.reset(readerSource.get());
 
 
             transportSource.setPosition(0.0); // ensuring it starts at 0.

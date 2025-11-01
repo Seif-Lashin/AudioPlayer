@@ -3,6 +3,22 @@
 #include "PlayerAudio.h"
 
 
+struct Playlist
+{
+    juce::String name;
+    juce::Array<juce::File> tracks;
+
+    Playlist(juce::String n) : name(n) {}
+
+    // Returns the playlist name without extension if possible, or just the name
+    juce::String getFileNameWithoutExtension() const
+    {
+        // If the playlist name is a filename, strip extension; otherwise, just return name
+        return name.upToLastOccurrenceOf(".", false, false);
+    }
+};
+
+
 class PlayerGUI : public juce::AudioAppComponent,
     public juce::Button::Listener,
     public juce::Slider::Listener,
@@ -14,6 +30,7 @@ class PlayerGUI : public juce::AudioAppComponent,
 
 {
 private:
+
     PlayerAudio playerAudio;
     juce::TextButton loadButton{ "Load File" };
     juce::TextButton restartButton{ "Start" };
@@ -32,10 +49,25 @@ private:
     juce::Label trackLabel;
     std::unique_ptr<juce::FileChooser> fileChooser;
     // Playlist members
-    juce::Array<juce::File> playlist;
+// NEW: Collection of all playlists
+    juce::Array<Playlist> allPlaylists;
+    int activePlaylistIndex = 0; // Index into allPlaylists
+    juce::ComboBox playlistSelector;
+    juce::TextButton addPlaylistButton{ "New Playlist" }; // Button to create a new playlist
+    // -- END Playlist members replacement/addition --    
     juce::TableListBox playlistTable;
     int currentTrackIndex = -1;
     
+    juce::Array<juce::File>& getActivePlaylist()
+    {
+        // Safety check: ensure allPlaylists is never empty and return the tracks array
+        if (allPlaylists.isEmpty())
+        {
+            // You may want to handle this case, but for simplicity, we'll assume it's always non-empty.
+        }
+        return allPlaylists.getReference(activePlaylistIndex).tracks;
+    }
+
     void updateMarkerList();
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PlayerGUI)
 
@@ -51,10 +83,13 @@ private:
 
     // New: Private helper to load a track from the playlist
     void loadTrack(int index);
+    void updateTrackInfoDisplay();
 
 public:
     PlayerGUI();
     ~PlayerGUI() override;
+
+
 
     void paint(juce::Graphics& g) override;
     void resized() override;

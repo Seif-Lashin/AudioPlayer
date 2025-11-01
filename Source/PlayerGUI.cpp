@@ -44,6 +44,21 @@ PlayerGUI::PlayerGUI()
     setAudioChannels(0, 2);
     startTimer(60);
 
+    // Add new playlist button
+    addPlaylistButton.addListener(this);
+    addAndMakeVisible(addPlaylistButton);
+
+    // Initialize playlist management with a default playlist
+    allPlaylists.add(Playlist("Default Playlist"));
+
+    // Set up the playlist selector ComboBox
+    addAndMakeVisible(playlistSelector);
+    playlistSelector.addListener(this);
+    playlistSelector.addItem("Default Playlist", 1);
+    playlistSelector.setSelectedId(1, juce::dontSendNotification); // Select the first playlist
+
+
+
     // Volume slider
     volumeSlider.textFromValueFunction = [](double value) {//cahnging value to percentage
         double percent = value * 100;
@@ -229,10 +244,28 @@ void PlayerGUI::resized()
 // New Private Helper Method
 void PlayerGUI::loadTrack(int index)
 {
-    if (index >= 0 && index < playlist.size())
+
+    juce::Array<juce::File>& currentPlaylist = getActivePlaylist();
+
+    if (index >= 0 && index < currentPlaylist.size())
     {
         currentTrackIndex = index;
-        playerAudio.loadFile(playlist[currentTrackIndex]);
+        juce::File trackToLoad = currentPlaylist[currentTrackIndex];
+
+        playerAudio.loadFile(currentPlaylist[currentTrackIndex]);
+        playerAudio.play();
+
+        auto& playlist = allPlaylists[currentTrackIndex];
+        if (!playlist.tracks.isEmpty())
+        {
+            playerAudio.loadFile(playlist.tracks[0]); // Load the first track in the selected playlist
+        }
+        else
+        {
+            // Optionally handle empty playlist case, e.g. show "No tracks in playlist"
+            trackLabel.setText("No tracks in playlist", juce::dontSendNotification);
+            return;
+        }
 
         // Update GUI elements
         trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
@@ -242,8 +275,11 @@ void PlayerGUI::loadTrack(int index)
         // Highlight the playing track in the table
         playlistTable.selectRow(currentTrackIndex);
 
+        updateTrackInfoDisplay();
+
         // Save the currently playing file as the last session file
-        playerAudio.savecurrentfilepath(playlist[currentTrackIndex]);
+        if (!allPlaylists[currentTrackIndex].tracks.isEmpty())
+            playerAudio.savecurrentfilepath(allPlaylists[currentTrackIndex].tracks[0]);
     }
 }
 
@@ -268,12 +304,15 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     if (button == &loadButton)
     {
 
+        // Set flags to allow selecting multiple files and directories
+        auto fileChooserFlags = juce::FileBrowserComponent::openMode
+            | juce::FileBrowserComponent::canSelectFiles
+            | juce::FileBrowserComponent::canSelectMultipleItems;
+
         // New: FileChooser to select multiple files
-        fileChooser = std::make_unique<juce::FileChooser>(
-            "Select audio files to create a playlist...",
-            juce::File{},
-            "*.wav;*.mp3"
-        );
+        fileChooser.reset(new juce::FileChooser("Select audio files to add to playlist...",
+            juce::File::getSpecialLocation(juce::File::userMusicDirectory),
+            "*.mp3;*.wav"));
 
         // Use launchAsync with canSelectMultipleItems flag
         fileChooser->launchAsync(
@@ -284,20 +323,40 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 
                 if (results.size() > 0)
                 {
-                    // Clear old playlist and add new results
-                    playlist.clear();
-                    playlist.addArray(results);
+                    juce::Array<juce::File>& activeTracks = getActivePlaylist();
 
-                    // Reload the playlist table to show new tracks
+                    for (const auto& file : results)
+                    {
+                        activeTracks.add(file);
+                    }
+
+                    // Notify the TableListBox to refresh its view
                     playlistTable.updateContent();
+
+                    // Clear old playlist and add new results
+                    /*allPlaylists.clear();
+                    allPlaylists.addArray(results);*/
 
                     // Automatically load the first track
                     loadTrack(0);
-                }
 
+                    
+                }
+                //updateTrackInfoDisplay();
                 fileChooser.reset(); fileChooser.reset();
 
             });
+    }
+    else if (button == &addPlaylistButton)
+    {
+        // Logic to add a new playlist
+        juce::String newName = "New Playlist " + juce::String(allPlaylists.size() + 1);
+        allPlaylists.add(Playlist(newName));
+
+        // Add the new playlist to the selector and switch to it
+        int newId = allPlaylists.size();
+        playlistSelector.addItem(newName, newId);
+        playlistSelector.setSelectedId(newId, juce::sendNotification); // sending a notification triggers comboBoxChanged
     }
        
     if(button == &restartButton)
@@ -363,7 +422,7 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 
 int PlayerGUI::getNumRows()
 {
-    return playlist.size();
+    return getActivePlaylist().size();
 }
 
 void PlayerGUI::paintRowBackground(juce::Graphics& g, int rowNumber, int width, int height, bool rowIsSelected)
@@ -383,7 +442,7 @@ void PlayerGUI::changeListenerCallback(juce::ChangeBroadcaster* source)
     if (source == &playerAudio.getTransportSource())
     {
         // Check if the track has finished playing AND we have a valid playlist
-        if (!playerAudio.getTransportSource().isPlaying() && playerAudio.getTransportSource().getCurrentPosition() == 0.0 && playlist.size() > 0 && currentTrackIndex != -1)
+        if (!playerAudio.getTransportSource().isPlaying() && playerAudio.getTransportSource().getCurrentPosition() == 0.0 && allPlaylists.size() > 0 && currentTrackIndex != -1)
         {
             // If repeat is toggled, restart the current track.
             if (repeatButton.getToggleState())
@@ -395,8 +454,8 @@ void PlayerGUI::changeListenerCallback(juce::ChangeBroadcaster* source)
             {
                 // CORRECTED LOGIC: Advance to the next track using simple increment
                 int nextIndex = currentTrackIndex + 1;
-
-                if (nextIndex < playlist.size())
+                juce::Array<juce::File>& currentPlaylist = getActivePlaylist(); // Get the active track list
+                if (nextIndex < currentPlaylist.size())
                 {
                     loadTrack(nextIndex); // Load next track and start playing
                     playerAudio.play();
@@ -417,9 +476,12 @@ void PlayerGUI::changeListenerCallback(juce::ChangeBroadcaster* source)
 
 void PlayerGUI::paintCell(juce::Graphics& g, int rowNumber, int columnId, int width, int height, bool rowIsSelected)
 {
-    if(rowNumber < playlist.size() && columnId == 1) // ColumnId 1 is the "Track Title" column
+    juce::Array<juce::File>& currentPlaylist = getActivePlaylist();
+
+    if(rowNumber < currentPlaylist.size()) // ColumnId 1 is the "Track Title" column
     {
-        juce::String filename = playlist[rowNumber].getFileNameWithoutExtension();
+        juce::Array<juce::File>& currentPlaylist = getActivePlaylist();
+        juce::String filename = allPlaylists[rowNumber].getFileNameWithoutExtension();
 
         g.setColour(juce::Colours::white);
         g.setFont(height * 0.7f);
@@ -467,11 +529,69 @@ void PlayerGUI::timerCallback()
     }
 }
 
+void PlayerGUI::updateTrackInfoDisplay()
+{
+    // 1. Update the main track label with the title
+    trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
 
-void PlayerGUI::comboBoxChanged(juce::ComboBox* newComboBox) {
-    playerAudio.FindPlayback(newComboBox, markerList);
+    // 2. Retrieve the full metadata
+    const juce::StringPairArray& metadata = playerAudio.getMetadata();
+
+    // 3. Construct a display string for other metadata (e.g., Artist, Album, Year)
+    juce::String artist = metadata.getValue("Artist", "Unknown Artist");
+    juce::String album = metadata.getValue("Album", "Unknown Album");
+    juce::String year = metadata.getValue("Year", "N/A");
+
+    // Try to find an Artist tag using common keys, falling back to a generic name
+    if (artist == "Unknown Artist")
+        artist = metadata.getValue("artist", "Unknown Artist");
+
+
+    juce::String metadataString;
+    metadataString << "Artist: " << artist << "\n"
+        << "Album: " << album << "\n"
+        << "Year: " << year;
+
+    // Update a separate label (you'll need to add this label in PlayerGUI.h/cpp)
+    // For this example, let's just use DBG, but you would normally use another juce::Label
+    // metadataLabel.setText(metadataString, juce::dontSendNotification); // if you added metadataLabel
+
+    // For now, let's just use the trackLabel for the title and the playlist for everything else.
+    // If you want to display the full artist/album, you should add a new juce::Label member 
+    // to PlayerGUI.h (e.g., `juce::Label metadataLabel;`) and use the commented line above.
 }
 
+
+//void PlayerGUI::comboBoxChanged(juce::ComboBox* newComboBox) {
+//    playerAudio.FindPlayback(newComboBox, markerList);
+//}
+
+void PlayerGUI::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
+{
+    if (comboBoxThatHasChanged == &markerList)
+    {
+        // ... (existing marker list logic)
+        playerAudio.FindPlayback(comboBoxThatHasChanged, markerList);
+    }
+    else if (comboBoxThatHasChanged == &playlistSelector)
+    {
+        // The item ID starts at 1, so the index is ID - 1
+        int newIndex = playlistSelector.getSelectedId() - 1;
+
+        if (newIndex != activePlaylistIndex && newIndex >= 0 && newIndex < allPlaylists.size())
+        {
+            activePlaylistIndex = newIndex;
+
+            // Stop playback and reset current track index for the new playlist
+            playerAudio.stop();
+            currentTrackIndex = -1;
+
+            // Refresh the GUI
+            playlistTable.updateContent();
+            updateTrackInfoDisplay(); // Update display (e.g., to "No File Loaded")
+        }
+    }
+}
 
 void PlayerGUI::updateMarkerList() {
     playerAudio.UpdateMarkerList(markerList);
