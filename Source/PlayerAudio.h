@@ -63,6 +63,7 @@ public:
     // when last session is pressed
     juce::File retrievelastfile();
 
+
     // Markers
     // add current position to marker list
     void addPositionAsMarker();

@@ -257,6 +257,23 @@ void PlayerGUI::resized()
 
 }
 
+void PlayerGUI::updateGUI() {
+    double trackLength = playerAudio.getLength();
+    trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
+    trackSlider.setRange(0.0, trackLength);
+    trackSlider.setValue(playerAudio.getPosition(), juce::dontSendNotification);
+    speedSlider.setValue(1.0, juce::dontSendNotification);
+
+    segmentSlider.setRange(0.0, trackLength);
+    segmentSlider.setMinValue(0.0);
+    segmentSlider.setMaxValue(trackLength);
+
+    playerAudio.setStart(0.0f);
+    playerAudio.setEnd((float)trackLength);
+    updateMarkerList();
+
+}
+
 
 void PlayerGUI::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
@@ -294,22 +311,7 @@ void PlayerGUI::buttonClicked(juce::Button* button)
                 auto file = fc.getResult();
                 playerAudio.loadFile(file);
 
-                trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
-
-
-                //only set the range when loading a new file
-                trackSlider.setRange(0.0, playerAudio.getLength());
-
-                speedSlider.setValue(1.0, juce::dontSendNotification);
-
-				segmentSlider.setRange(0.0, playerAudio.getLength());
-				segmentSlider.setMinValue(0.0);
-				segmentSlider.setMaxValue(playerAudio.getLength());
-				playerAudio.setStart(0.0f);
-				playerAudio.setEnd((float)playerAudio.getLength());
-
-                // When loading a new file, update (clear) the marker list
-                updateMarkerList();
+                updateGUI();
             });
     }
 
@@ -355,21 +357,10 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     if (button == &lastSession) {
         juce::File loadedfile = playerAudio.retrievelastfile(); // getting the file
         if (loadedfile.existsAsFile()) { // if it exists
-            trackSlider.setRange(0.0, playerAudio.getLength()); // syncing the trackslider with the file
-
-            speedSlider.setValue(1.0, juce::dontSendNotification);
-
-
-			
-            segmentSlider.setRange(0.0, playerAudio.getLength());
-			segmentSlider.setMinValue(0.0);
-			segmentSlider.setMaxValue(playerAudio.getLength());
-
-            // Also need to load the markers of the last session                         NOT DONE YET
-            updateMarkerList();
+            updateGUI();
       
         }
-        trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
+       
     }
 
 

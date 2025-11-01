@@ -10,6 +10,8 @@ class PlayerGUI : public juce::AudioAppComponent,
     public juce::ComboBox::Listener
 {
 private:
+    void updateGUI();
+ 
     PlayerAudio playerAudio;
     juce::TextButton loadButton{ "Load File" };
     juce::TextButton restartButton{ "Start" };
