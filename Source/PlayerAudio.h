@@ -29,7 +29,6 @@ private:
     std::unique_ptr<juce::ResamplingAudioSource> resamplingSource;
     double currentSampleRate = 0.0;
 
-    bool loadAudioFromFile(const juce::File& file, double startPosition = 0.0); // private helper function to fix redundancy in PlayerAudio.cpp
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PlayerAudio)
 public:
@@ -63,7 +62,7 @@ public:
 	void SegmentToggle(bool shouldSegment);
 	void segmentPlayCheck();
 	void setSegment(double Start, double End);
-    juce::String getCurrentTrackName() const { return currentTrackName; }
+    juce::String getCurrentTrackName();
     //when a new file is loaded
     void savecurrentfilepath(const juce::File& file);
     // when last session is pressed
@@ -85,8 +84,5 @@ public:
     float getRMS() const { return currentRMS.load(); };
     bool IsPlaying()const;
 
-
     void setSpeed(double ratio);
-
-
 };
