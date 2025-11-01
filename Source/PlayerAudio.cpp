@@ -11,6 +11,8 @@ PlayerAudio::PlayerAudio()
 {
     formatManager.registerBasicFormats();
 
+	resamplingSource = std::make_unique<juce::ResamplingAudioSource>(&transportSource, false);
+
     // preparing the system file
     juce::PropertiesFile::Options options;
     options.applicationName = "Simple Audio Player";
@@ -41,11 +43,13 @@ PlayerAudio::~PlayerAudio() {
 }
 
 void PlayerAudio::prepareToPlay(int samplesPerBlockExpected, double sampleRate) {
+	currentSampleRate = sampleRate;
     transportSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
+	resamplingSource->prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
 
 void PlayerAudio::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) {
-    resamplingSource.getNextAudioBlock(bufferToFill);
+    resamplingSource->getNextAudioBlock(bufferToFill);
 
     float rms = 0.0f;
     int cntChannels = bufferToFill.buffer->getNumChannels();
@@ -73,7 +77,7 @@ void PlayerAudio::loadFile(const juce::File& file) {
         {
             savecurrentfilepath(file);
             clearMarkers();
-
+            
             //metadata extraction using taglib
             getMetadata(file);
 
@@ -91,6 +95,7 @@ void PlayerAudio::loadFile(const juce::File& file) {
 
             //repeat
             readerSource->setLooping(islooping); //keep track of state when loading new track
+
 
             start = 0;
             end = getLength();
@@ -353,4 +358,10 @@ void PlayerAudio::getMetadata(const juce::File& file) {
 
 juce::String PlayerAudio::getCurrentTrackName() {
     return currentTrackName;
+}
+
+void PlayerAudio::setSpeed(double ratio) {
+    if (resamplingSource != nullptr) {
+        resamplingSource->setResamplingRatio(ratio);
+    }
 }

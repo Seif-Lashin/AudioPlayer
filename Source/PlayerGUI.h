@@ -25,10 +25,12 @@ private:
     juce::TextButton addMarker{ "Add Marker" };
 	juce::ToggleButton segmentButton{ "Segment" };
     juce::ComboBox markerList;
+	juce::Slider speedSlider;
     juce::Slider segmentSlider;
     juce::Slider volumeSlider;
     juce::Slider trackSlider;
     juce::Label trackLabel;
+	juce::Label speedLabel;
     std::unique_ptr<juce::FileChooser> fileChooser;
     
     void updateMarkerList();

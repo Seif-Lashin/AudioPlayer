@@ -67,11 +67,24 @@ PlayerGUI::PlayerGUI()
     trackSlider.setRange(0.0, playerAudio.getLength());
     trackSlider.setValue(0.0);
 
-    for (auto* sli : { &volumeSlider, &trackSlider, &segmentSlider}) //sliders
+    for (auto* sli : { &volumeSlider, &trackSlider, &segmentSlider, &speedSlider}) //sliders
     {
         sli->addListener(this);
         addAndMakeVisible(sli);
     }
+
+    addAndMakeVisible(speedLabel);
+    speedLabel.setText("Speed:", juce::dontSendNotification);
+    speedLabel.setJustificationType(juce::Justification::centredRight);
+
+    speedSlider.setRange(0.5, 2.0, 0.01); // From half-speed to double-speed
+    speedSlider.setValue(1.0);
+    speedSlider.setSkewFactorFromMidPoint(1.0); // Makes 1.0x the center of the slider
+    speedSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 50, 20);
+    speedSlider.textFromValueFunction = [](double value) { return juce::String(value, 2) + "x"; };
+    speedSlider.valueFromTextFunction = [](const juce::String& text) { return text.removeCharacters("x").getDoubleValue(); };
+
+
 	segmentSlider.setSliderStyle(juce::Slider::TwoValueHorizontal);
     segmentSlider.setRange(0.0, playerAudio.getLength());
 	segmentSlider.setMinValue(0.0);
@@ -215,10 +228,13 @@ void PlayerGUI::resized()
         }
     }
 
-    int sliderWidth = mainAreaRightEdge - margin;
-    int speedLabelWidth = 60;
     int sliderY = bottomRowY - spacing - sliderHeight;
     int sliderWidth = mainAreaRightEdge - margin; 
+    int speedSliderY = sliderY - sliderHeight - spacing - margin * 2;
+	int speedLabelWidth = 60;
+    speedLabel.setBounds(margin, speedSliderY, speedLabelWidth, sliderHeight);
+    speedSlider.setBounds(margin + speedLabelWidth + spacing, speedSliderY, sliderWidth - speedLabelWidth - spacing, sliderHeight);
+
     trackSlider.setBounds(margin, sliderY, sliderWidth, sliderHeight);
 
 	int sliderY2 = sliderY - spacing - sliderHeight;
@@ -246,9 +262,6 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 
     if (button == &loadButton)
     {
-
-
-
         juce::FileChooser chooser("Select audio files...",
             juce::File{},
             "*.wav;*.mp3");
@@ -353,6 +366,10 @@ void PlayerGUI::sliderValueChanged(juce::Slider* slider)
     if (slider == &segmentSlider) {
 		playerAudio.setSegment(segmentSlider.getMinValue(), segmentSlider.getMaxValue());
     }
+
+    if(slider == &speedSlider) {
+        playerAudio.setSpeed(slider->getValue());
+	}
 }
 
 void PlayerGUI::timerCallback()
