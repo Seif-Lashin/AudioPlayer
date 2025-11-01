@@ -24,6 +24,7 @@ PlayerAudio::PlayerAudio()
 
     //creating the PropertiesFile object and store it in our pointer
     history = std::make_unique<juce::PropertiesFile>(settingsfile, options); 
+    
 }
 
 PlayerAudio::~PlayerAudio() {
@@ -103,6 +104,8 @@ void PlayerAudio::loadFile(const juce::File& file) {
             //repeat
             readerSource->setLooping(islooping); //keep track of state when loading new track
 
+            start = 0;
+            end = getLength();
             //mute
             
             // Attach safely
@@ -147,15 +150,15 @@ void PlayerAudio::setPosition(double pos) {
 }
 
 void PlayerAudio::Jumptostart() {
-   setPosition(0);
+    setPosition(start);
 }
 
 void PlayerAudio::Jumptoend() {
-   setPosition(getLength());
+    setPosition(end);
 }
 
 void PlayerAudio::plus10(double pos) {
-    double Length = getLength(); // is the total length of the size file.
+    double Length = end; // is the total length of the size file.
     double Next = pos + 10.0;
     if (Length > 0.0) {
         Next = std::min(Next, Length);
@@ -164,10 +167,10 @@ void PlayerAudio::plus10(double pos) {
 }
 
 void PlayerAudio::minus10(double pos) {
-    double Length = getLength(); // is the total length of the size file.
+    double Length = end; // is the total length of the size file.
     double Next = pos - 10.0;
     if (Length > 0.0) {
-        Next = std::max(Next, 0.0);
+        Next = std::max(Next, (double)start);
     }
    setPosition(Next);
    if (isPlaying)play();
@@ -257,7 +260,8 @@ juce::File PlayerAudio::retrievelastfile() {
                
                 transportSource.setSource(readerSource.get(), 0, nullptr, reader->sampleRate);
 
-
+                start = 0;
+				end = getLength();
                 //getting the saved position, if none its 0.0
                 double lastPos = history->getDoubleValue(key_lastPosition, 0.0);   
                 transportSource.setPosition(lastPos);
@@ -357,10 +361,48 @@ int PlayerAudio::markerChecker() {
     return selectedMarker;
 }
 
+void PlayerAudio::setStart(float Start) {
+    start = Start;
+}
 
-bool PlayerAudio::IsPlaying() const {
+void PlayerAudio::setEnd(float End) {
+    end = End;
+}
+
+float PlayerAudio::getStart() {
+    return start;
+}
+
+float PlayerAudio::getEnd() {
+    return end;
+}
+
+void PlayerAudio::SegmentToggle(bool shouldSegment) {
+    isSegment = shouldSegment;
+    if (!isSegment) {
+		start = 0.0f;
+		end = (float)getLength();
+    }
+}
+
+void PlayerAudio::segmentPlayCheck() {
+    double segStart = start;
+    double segEnd = end;
+    if (segEnd > segStart)
+        if (getPosition() < segStart || getPosition() >= segEnd) {
+            setPosition(segStart);
+        }
+}
+
+void PlayerAudio::setSegment(double Start, double End) {
+    start = Start;
+    end = End;
+}
+
+bool PlayerAudio::isPlaying() const {
     return transportSource.isPlaying();
 }
+<<<<<<< HEAD
 
 
 void PlayerAudio::setSpeed(double ratio) {
@@ -368,3 +410,5 @@ void PlayerAudio::setSpeed(double ratio) {
         resamplingSource->setResamplingRatio(ratio);
     }
 }
+=======
+>>>>>>> 3d1d1e88275968483dd77f18192fc86adc293b1e

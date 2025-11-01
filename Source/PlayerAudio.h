@@ -13,7 +13,10 @@ private:
     bool ismuted = false;
     bool isPlaying = true;
     bool isFun = false;
+	bool isSegment = false;
     float lastVolume = 0.5;
+    float start = 0.0;
+    float end = 0.0;
     std::vector<double> trackMarkers;
 
     // responsible for background color adaptivness with the soundfile
@@ -24,7 +27,6 @@ private:
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PlayerAudio)
 public:
-
     PlayerAudio();
     ~PlayerAudio();
 
@@ -32,6 +34,10 @@ public:
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override;
     void releaseResources() override;
 
+    void setStart(float Start);
+    void setEnd(float End);
+    float getStart();
+    float getEnd();
     void loadFile(const juce::File& file);
     void play();
     void stop();
@@ -48,6 +54,9 @@ public:
     void funToggle(bool shouldfun);
     bool getFunState() const;
     void mute(bool shouldMute);
+	void SegmentToggle(bool shouldSegment);
+	void segmentPlayCheck();
+	void setSegment(double Start, double End);
     juce::String getCurrentTrackName() const { return currentTrackName; }
     //when a new file is loaded
     void savecurrentfilepath(const juce::File& file);
