@@ -389,3 +389,7 @@ void PlayerAudio::setSegment(double Start, double End) {
     start = Start;
     end = End;
 }
+
+bool PlayerAudio::isPlaying() const {
+    return transportSource.isPlaying();
+}
