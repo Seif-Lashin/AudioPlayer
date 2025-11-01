@@ -1,6 +1,9 @@
-﻿#include "PlayerAudio.h"
+#include "PlayerAudio.h"
 #include <cmath>
-
+#include <tag.h>
+#include <tstring.h>
+#include <fileref.h>
+#include <audioproperties.h>
 // edited this part to take properties file
 
 
@@ -118,7 +121,11 @@ void PlayerAudio::loadFile(const juce::File& file) {
         if (auto* reader = formatManager.createReaderFor(file))
         {
             savecurrentfilepath(file);
-           
+            clearMarkers();
+            
+            //metadata extraction using taglib
+			getMetadata(file);
+
             // clearing out the history
             history->setValue(key_lastPosition, 0.0);
             history->saveIfNeeded();
@@ -397,3 +404,18 @@ void PlayerAudio::setSpeed(double ratio) {
     }
 }
 
+void PlayerAudio::getMetadata(const juce::File& file) {
+    TagLib::FileRef f(file.getFullPathName().toRawUTF8());
+    if (!f.isNull() && f.tag()) {
+        TagLib::Tag* tag = f.tag();
+        title = juce::String(tag->title().toCString(true));
+        artist = juce::String(tag->artist().toCString(true));
+        if (title.isNotEmpty() || artist.isNotEmpty()) {
+            if(title.isEmpty()) title = "UNKNOWN";
+            else if(artist.isEmpty()) artist = "UNKNOWN";
+            currentTrackName = title + " - " + artist;
+        }
+        else currentTrackName = file.getFileNameWithoutExtension();
+    }
+    else currentTrackName = file.getFileNameWithoutExtension();
+}

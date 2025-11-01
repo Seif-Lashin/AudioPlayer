@@ -40,6 +40,7 @@ Browse.VC.db
 *.so
 *.dylib
 *.dll
+*.lib
 
 # Fortran module files
 *.mod
@@ -49,7 +50,6 @@ Browse.VC.db
 *.lai
 *.la
 *.a
-*.lib
 
 # Executables
 *.exe

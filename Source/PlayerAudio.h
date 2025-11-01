@@ -4,9 +4,6 @@
 
 class PlayerAudio : public juce::AudioSource{
 private:
-    const juce::String key = "Last Played";
-    const juce::String key_lastPosition = "Last Position";
-    juce::String currentTrackName;
     juce::AudioFormatManager formatManager;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
     std::unique_ptr<juce::PropertiesFile>history; // playeraudio owns its own settings file
@@ -20,7 +17,12 @@ private:
     float start = 0.0;
     float end = 0.0;
     std::vector<double> trackMarkers;
-
+    juce::String currentTrackName;
+    juce::String title;
+    juce::String artist;
+    const juce::String key = "Last Played";
+    const juce::String key_lastPosition = "Last Position";
+	void getMetadata(const juce::File& file);
     // responsible for background color adaptivness with the soundfile
     std::atomic<float> currentRMS = 0.0f;
 
