@@ -11,8 +11,6 @@ PlayerAudio::PlayerAudio()
 {
     formatManager.registerBasicFormats();
 
-    resamplingSource = std::make_unique<juce::ResamplingAudioSource>(&transportSource, false);
-
     // preparing the system file
     juce::PropertiesFile::Options options;
     options.applicationName = "Simple Audio Player";
@@ -43,13 +41,11 @@ PlayerAudio::~PlayerAudio() {
 }
 
 void PlayerAudio::prepareToPlay(int samplesPerBlockExpected, double sampleRate) {
-    currentSampleRate = sampleRate;
     transportSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
-    resamplingSource->prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
 
 void PlayerAudio::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) {
-    resamplingSource->getNextAudioBlock(bufferToFill);
+    resamplingSource.getNextAudioBlock(bufferToFill);
 
     float rms = 0.0f;
     int cntChannels = bufferToFill.buffer->getNumChannels();
@@ -99,7 +95,7 @@ void PlayerAudio::loadFile(const juce::File& file) {
             start = 0;
             end = getLength();
             //mute
-
+            
             // Attach safely
             transportSource.setSource(readerSource.get(),
                 0,
@@ -175,7 +171,6 @@ double PlayerAudio::getLength() const {
 }
 
 void PlayerAudio::repeatToggle(bool shouldRepeat) {
-
     islooping = shouldRepeat; //changing the state of islooping depending on button
     if (readerSource != nullptr) {
         auto cPos = getPosition();
@@ -212,7 +207,6 @@ void PlayerAudio::mute(bool shouldMute) {
 
 juce::File PlayerAudio::retrievelastfile() {
     juce::String lastfilepath = history->getValue(key, juce::String()); // getting the filepath from our history
-
     if (lastfilepath.isNotEmpty()) {       // if the path isn't empty
         juce::File lastFile(lastfilepath);// we get the file in it
         double lastPos = history->getDoubleValue(key_lastPosition, 0.0);
@@ -232,19 +226,13 @@ void PlayerAudio::savecurrentfilepath(const juce::File& file) {
     history->saveIfNeeded();             // forcing the save.
 }
 
-
-
-
 void PlayerAudio::addPositionAsMarker() {
     double current = getPosition();
-
     for (double marker : trackMarkers) {
         if (std::abs(marker - current) <= 0.01) {
             return;
         }
     }
-
-
     trackMarkers.push_back(current);
     sort(trackMarkers.begin(), trackMarkers.end());
 }
@@ -296,13 +284,8 @@ void PlayerAudio::UpdateMarkerList(juce::ComboBox& markerList) {
 int PlayerAudio::markerChecker() {
     double currentPos = getPosition();
     auto& markers = getMarkers();
-
     int selectedMarker = 0;
-
-
     double approx = 0.75;
-
-
     for (int i = 0; i < markers.size(); ++i) {
         double current = markers[i];
 
@@ -350,18 +333,6 @@ void PlayerAudio::segmentPlayCheck() {
 void PlayerAudio::setSegment(double Start, double End) {
     start = Start;
     end = End;
-}
-
-bool PlayerAudio::IsPlaying() const {
-    return transportSource.isPlaying();
-}
-
-
-
-void PlayerAudio::setSpeed(double ratio) {
-    if (resamplingSource != nullptr) {
-        resamplingSource->setResamplingRatio(ratio);
-    }
 }
 
 void PlayerAudio::getMetadata(const juce::File& file) {

@@ -10,7 +10,7 @@ private:
     juce::AudioTransportSource transportSource;
     bool islooping = false;
     bool ismuted = false;
-    bool isPlaying = false;
+    bool isPlaying = true;
     bool isFun = false;
 	bool isSegment = false;
     float lastVolume = 0.5;
@@ -28,8 +28,6 @@ private:
 
     std::unique_ptr<juce::ResamplingAudioSource> resamplingSource;
     double currentSampleRate = 0.0;
-
-
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PlayerAudio)
 public:
     PlayerAudio();
@@ -68,7 +66,6 @@ public:
     // when last session is pressed
     juce::File retrievelastfile();
 
-
     // Markers
     // add current position to marker list
     void addPositionAsMarker();
@@ -83,6 +80,5 @@ public:
 
     float getRMS() const { return currentRMS.load(); };
     bool IsPlaying()const;
-
     void setSpeed(double ratio);
 };
