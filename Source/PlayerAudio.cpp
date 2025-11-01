@@ -113,22 +113,6 @@ void PlayerAudio::loadFile(const juce::File& file) {
     }
 }
 
-juce::File PlayerAudio::retrievelastfile() {
-    juce::String lastfilepath = history->getValue(key, juce::String()); // getting the filepath from our history
-
-    if (lastfilepath.isNotEmpty()) {       // if the path isn't empty
-        juce::File lastFile(lastfilepath);// we get the file in it
-        double lastPos = history->getDoubleValue(key_lastPosition, 0.0);
-		loadFile(lastFile);              // loading the file
-        setPosition(lastPos);            // setting the last position
-		return lastFile;
-    }
-    else {
-        return juce::File();
-    }
-}
-
-
 void PlayerAudio::play() {
     isPlaying = true;
     transportSource.start();
@@ -226,6 +210,20 @@ void PlayerAudio::mute(bool shouldMute) {
     }
 }
 
+juce::File PlayerAudio::retrievelastfile() {
+    juce::String lastfilepath = history->getValue(key, juce::String()); // getting the filepath from our history
+
+    if (lastfilepath.isNotEmpty()) {       // if the path isn't empty
+        juce::File lastFile(lastfilepath);// we get the file in it
+        double lastPos = history->getDoubleValue(key_lastPosition, 0.0);
+        loadFile(lastFile);              // loading the file
+        setPosition(lastPos);            // setting the last position
+        return lastFile;
+    }
+    else {
+        return juce::File();
+    }
+}
 
 void PlayerAudio::savecurrentfilepath(const juce::File& file) {
     juce::String filepath = file.getFullPathName();  // saving the current file path
