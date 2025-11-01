@@ -1,10 +1,12 @@
 #include "PlayerAudio.h"
 #include <cmath>
-
+#include <tag.h>
+#include <tstring.h>
+#include <fileref.h>
+#include <audioproperties.h>
 // edited this part to take properties file
 
-const juce::String key = "Last Played";
-const juce::String key_lastPosition = "Last Position";
+
 PlayerAudio::PlayerAudio()
 {
     formatManager.registerBasicFormats();
@@ -70,19 +72,8 @@ void PlayerAudio::loadFile(const juce::File& file) {
             savecurrentfilepath(file);
             clearMarkers();
             
-            juce::String title = reader->metadataValues["title"];
-            juce::String artist = reader->metadataValues["artist"];
-
-            if (title.isNotEmpty() && artist.isNotEmpty()) {
-                currentTrackName = title + " - " + artist;
-            }
-            else if (title.isNotEmpty()) {
-                currentTrackName = title;
-            }
-            else {
-                currentTrackName = file.getFileName(); 
-            }
-             currentTrackName = file.getFileName();
+            //metadata extraction using taglib
+			getMetadata(file);
 
             // clearing out the history
             history->setValue(key_lastPosition, 0.0);
@@ -388,4 +379,20 @@ void PlayerAudio::segmentPlayCheck() {
 void PlayerAudio::setSegment(double Start, double End) {
     start = Start;
     end = End;
+}
+
+void PlayerAudio::getMetadata(const juce::File& file) {
+    TagLib::FileRef f(file.getFullPathName().toRawUTF8());
+    if (!f.isNull() && f.tag()) {
+        TagLib::Tag* tag = f.tag();
+        title = juce::String(tag->title().toCString(true));
+        artist = juce::String(tag->artist().toCString(true));
+        if (title.isNotEmpty() || artist.isNotEmpty()) {
+            if(title.isEmpty()) title = "UNKNOWN";
+            else if(artist.isEmpty()) artist = "UNKNOWN";
+            currentTrackName = title + " - " + artist;
+        }
+        else currentTrackName = file.getFileNameWithoutExtension();
+    }
+    else currentTrackName = file.getFileNameWithoutExtension();
 }

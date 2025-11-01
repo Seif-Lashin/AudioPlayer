@@ -20,6 +20,9 @@ private:
     juce::String currentTrackName;
     juce::String title;
     juce::String artist;
+    const juce::String key = "Last Played";
+    const juce::String key_lastPosition = "Last Position";
+	void getMetadata(const juce::File& file);
     // responsible for background color adaptivness with the soundfile
     std::atomic<float> currentRMS = 0.0f;
 

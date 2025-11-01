@@ -35,10 +35,10 @@
   <EXPORTFORMATS>
     <VS2022 targetFolder="Builds/VisualStudio2022" externalLibraries="tag.lib">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="AudioPlayer" headerPath="../../ThirdParty/taglib/include/taglib"
-                       libraryPath="../../ThirdParty/taglib/lib/debug"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="AudioPlayer" headerPath="../../ThirdParty/taglib/include/taglib"
-                       libraryPath="../../ThirdParty/taglib/lib/release"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="AudioPlayer" headerPath="../../ThirdParty/taglib/include/taglib&#10;../../ThirdParty/taglib/include/taglib/toolkit"
+                       libraryPath="../../ThirdParty/taglib/lib/debug" defines="TAGLIB_STATIC"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="AudioPlayer" headerPath="../../ThirdParty/taglib/include/taglib&#10;../../ThirdParty/taglib/include/taglib/toolkit"
+                       libraryPath="../../ThirdParty/taglib/lib/release" defines="TAGLIB_STATIC"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_core" path="../JUCE/modules"/>
