@@ -67,9 +67,6 @@ PlayerGUI::PlayerGUI()
     trackSlider.setRange(0.0, 1.0);
     trackSlider.setValue(0.0);
 
-<<<<<<< HEAD
-
-
     addAndMakeVisible(speedLabel);
     speedLabel.setText("Speed:", juce::dontSendNotification);
     speedLabel.setJustificationType(juce::Justification::centredRight);
@@ -83,10 +80,10 @@ PlayerGUI::PlayerGUI()
 
 
 
-    for (auto* sli : { &volumeSlider, &trackSlider, &speedSlider }) //sliders
-=======
-    for (auto* sli : { &volumeSlider, &trackSlider, &segmentSlider}) //sliders
->>>>>>> 3d1d1e88275968483dd77f18192fc86adc293b1e
+
+
+    for (auto* sli : { &volumeSlider, &trackSlider, &segmentSlider, &speedSlider}) //sliders
+
     {
         sli->addListener(this);
         addAndMakeVisible(sli);
@@ -250,14 +247,14 @@ void PlayerGUI::resized()
     int sliderY = bottomRowY - spacing - sliderHeight;
     trackSlider.setBounds(margin, sliderY, sliderWidth, sliderHeight);
 
-<<<<<<< HEAD
-    int speedSliderY = sliderY - sliderHeight - spacing;
+
+    int speedSliderY = sliderY - sliderHeight - spacing - margin * 2;
     speedLabel.setBounds(margin, speedSliderY, speedLabelWidth, sliderHeight);
     speedSlider.setBounds(margin + speedLabelWidth + spacing, speedSliderY, sliderWidth - speedLabelWidth - spacing, sliderHeight);
-=======
+
 	int sliderY2 = sliderY - spacing - sliderHeight;
     segmentSlider.setBounds(margin, sliderY2, sliderWidth, sliderHeight);
->>>>>>> 3d1d1e88275968483dd77f18192fc86adc293b1e
+
 }
 
 
@@ -302,15 +299,14 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 
                 //only set the range when loading a new file
                 trackSlider.setRange(0.0, playerAudio.getLength());
-<<<<<<< HEAD
+
                 speedSlider.setValue(1.0, juce::dontSendNotification);
-=======
+
 				segmentSlider.setRange(0.0, playerAudio.getLength());
 				segmentSlider.setMinValue(0.0);
 				segmentSlider.setMaxValue(playerAudio.getLength());
 				playerAudio.setStart(0.0f);
 				playerAudio.setEnd((float)playerAudio.getLength());
->>>>>>> 3d1d1e88275968483dd77f18192fc86adc293b1e
 
                 // When loading a new file, update (clear) the marker list
                 updateMarkerList();
@@ -360,15 +356,15 @@ void PlayerGUI::buttonClicked(juce::Button* button)
         juce::File loadedfile = playerAudio.retrievelastfile(); // getting the file
         if (loadedfile.existsAsFile()) { // if it exists
             trackSlider.setRange(0.0, playerAudio.getLength()); // syncing the trackslider with the file
-<<<<<<< HEAD
+
             speedSlider.setValue(1.0, juce::dontSendNotification);
 
-=======
+
 			
             segmentSlider.setRange(0.0, playerAudio.getLength());
 			segmentSlider.setMinValue(0.0);
 			segmentSlider.setMaxValue(playerAudio.getLength());
->>>>>>> 3d1d1e88275968483dd77f18192fc86adc293b1e
+
             // Also need to load the markers of the last session                         NOT DONE YET
             updateMarkerList();
       
@@ -406,19 +402,17 @@ void PlayerGUI::sliderValueChanged(juce::Slider* slider)
         }
     }
 
-<<<<<<< HEAD
     if (slider == &speedSlider)
     {
         playerAudio.setSpeed(slider->getValue());
-=======
+    }
     if (slider == &segmentSlider) {
 		playerAudio.setSegment(segmentSlider.getMinValue(), segmentSlider.getMaxValue());
->>>>>>> 3d1d1e88275968483dd77f18192fc86adc293b1e
+
     }
 }
 
-void PlayerGUI::timerCallback()
-{
+void PlayerGUI::timerCallback(){
     // This timer callback automatically updates the slider's visual position.
     // We check !isMouseButtonDown() to prevent "fighting" with the user
     // if they are currently dragging the slider.

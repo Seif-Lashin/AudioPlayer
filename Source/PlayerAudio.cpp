@@ -399,10 +399,10 @@ void PlayerAudio::setSegment(double Start, double End) {
     end = End;
 }
 
-bool PlayerAudio::isPlaying() const {
+bool PlayerAudio::IsPlaying() const {
     return transportSource.isPlaying();
 }
-<<<<<<< HEAD
+
 
 
 void PlayerAudio::setSpeed(double ratio) {
@@ -410,5 +410,4 @@ void PlayerAudio::setSpeed(double ratio) {
         resamplingSource->setResamplingRatio(ratio);
     }
 }
-=======
->>>>>>> 3d1d1e88275968483dd77f18192fc86adc293b1e
+
