@@ -49,7 +49,6 @@ Browse.VC.db
 *.lai
 *.la
 *.a
-*.lib
 
 # Executables
 *.exe
