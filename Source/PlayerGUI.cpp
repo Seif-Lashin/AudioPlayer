@@ -356,11 +356,7 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 
     if (button == &lastSession) {
         juce::File loadedfile = playerAudio.retrievelastfile(); // getting the file
-        if (loadedfile.existsAsFile()) { // if it exists
-            updateGUI();
-      
-        }
-       
+        updateGUI();
     }
 
 

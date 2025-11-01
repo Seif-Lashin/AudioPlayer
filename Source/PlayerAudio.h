@@ -4,6 +4,8 @@
 
 class PlayerAudio : public juce::AudioSource{
 private:
+    const juce::String key = "Last Played";
+    const juce::String key_lastPosition = "Last Position";
     juce::String currentTrackName;
     juce::AudioFormatManager formatManager;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
@@ -11,7 +13,7 @@ private:
     juce::AudioTransportSource transportSource;
     bool islooping = false;
     bool ismuted = false;
-    bool isPlaying = true;
+    bool isPlaying = false;
     bool isFun = false;
 	bool isSegment = false;
     float lastVolume = 0.5;
@@ -24,6 +26,8 @@ private:
 
     std::unique_ptr<juce::ResamplingAudioSource> resamplingSource;
     double currentSampleRate = 0.0;
+
+    bool loadAudioFromFile(const juce::File& file, double startPosition = 0.0); // private helper function to fix redundancy in PlayerAudio.cpp
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PlayerAudio)
 public:
