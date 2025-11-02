@@ -7,6 +7,8 @@ const juce::String key = "Last Played";
 const juce::String key_lastPosition = "Last Position";
 PlayerAudio::PlayerAudio()
 {
+
+
     formatManager.registerBasicFormats();
 
     // preparing the system file

@@ -8,6 +8,8 @@ struct Playlist
     juce::String name;
     juce::Array<juce::File> tracks;
 
+    Playlist() : name("Unnamed Playlist") {} // A default name is a good practice
+
     Playlist(juce::String n) : name(n) {}
 
     // Returns the playlist name without extension if possible, or just the name
@@ -104,4 +106,5 @@ public:
     void comboBoxChanged(juce::ComboBox* newComboBox) override;
 
     void timerCallback() override;
+
 };

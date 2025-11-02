@@ -1,6 +1,7 @@
 #include <JuceHeader.h>
 #include "PlayerAudio.h"
 #include "PlayerGUI.h"
+
 // Our application class
 class SimpleAudioPlayer : public juce::JUCEApplication
 {

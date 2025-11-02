@@ -3,6 +3,7 @@
 
 PlayerGUI::PlayerGUI()
 {
+
     // Add buttons
     for (auto* btn : { &loadButton, &restartButton , &stopButton, &jumpForward, &jumpBackward,
          &endButton, &playButton, &lastSession, &addMarker })//text buttons
@@ -43,6 +44,7 @@ PlayerGUI::PlayerGUI()
     setSize(800, 450);
     setAudioChannels(0, 2);
     startTimer(60);
+    
 
     // Add new playlist button
     addPlaylistButton.addListener(this);
@@ -105,6 +107,8 @@ PlayerGUI::PlayerGUI()
     setSize(800, 300);
     setAudioChannels(0, 2);
     startTimer(60); // this starts the timer, 60 updates per second
+
+
 }
 
 PlayerGUI::~PlayerGUI()
@@ -114,6 +118,8 @@ PlayerGUI::~PlayerGUI()
 
     shutdownAudio();
     setLookAndFeel(nullptr);
+
+
 }
 
 void PlayerGUI::paint(juce::Graphics& g)
@@ -481,7 +487,7 @@ void PlayerGUI::paintCell(juce::Graphics& g, int rowNumber, int columnId, int wi
     if(rowNumber < currentPlaylist.size()) // ColumnId 1 is the "Track Title" column
     {
         juce::Array<juce::File>& currentPlaylist = getActivePlaylist();
-        juce::String filename = allPlaylists[rowNumber].getFileNameWithoutExtension();
+        juce::String filename = currentPlaylist[rowNumber].getFileNameWithoutExtension();
 
         g.setColour(juce::Colours::white);
         g.setFont(height * 0.7f);
@@ -596,3 +602,4 @@ void PlayerGUI::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
 void PlayerGUI::updateMarkerList() {
     playerAudio.UpdateMarkerList(markerList);
 }
+
