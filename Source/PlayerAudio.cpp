@@ -360,6 +360,11 @@ juce::String PlayerAudio::getCurrentTrackName() {
     return currentTrackName;
 }
 
+bool PlayerAudio::IsPlaying() const
+{
+    return transportSource.isPlaying();
+}
+
 void PlayerAudio::setSpeed(double ratio) {
     if (resamplingSource != nullptr) {
         resamplingSource->setResamplingRatio(ratio);
