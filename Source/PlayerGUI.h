@@ -1,6 +1,7 @@
 #pragma once
 #include <JuceHeader.h>
 #include "PlayerAudio.h"
+#include "WaveForm.h"
 
 
 class PlayerGUI : public juce::AudioAppComponent,
@@ -11,6 +12,7 @@ class PlayerGUI : public juce::AudioAppComponent,
 {
 private:
     PlayerAudio playerAudio;
+    WaveForm waveform;
     juce::TextButton loadButton{ "Load File" };
     juce::TextButton restartButton{ "Start" };
     juce::TextButton endButton{ "End" };

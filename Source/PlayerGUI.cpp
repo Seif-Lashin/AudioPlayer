@@ -1,7 +1,7 @@
 #include "PlayerGUI.h"
 #include <vector> // Make sure this is included for std::vector
 
-PlayerGUI::PlayerGUI()
+PlayerGUI::PlayerGUI() : waveform(playerAudio.getFormatManager(), playerAudio.getThumbnailCache()) // to not duplicate data, formatmanager reads files, thumbnailcache is a shared storage
 {
     // Add buttons
     for (auto* btn : { &loadButton, &restartButton , &stopButton, &jumpForward, &jumpBackward,
@@ -40,6 +40,9 @@ PlayerGUI::PlayerGUI()
     markerList.addListener(this);
     markerList.setTextWhenNoChoicesAvailable("No Markers Available<3");
     markerList.setTextWhenNothingSelected("Select a Marker");
+
+    //WaveForm
+    addAndMakeVisible(waveform);
 
     // Volume slider
     volumeSlider.textFromValueFunction = [](double value) {//cahnging value to percentage
@@ -198,6 +201,13 @@ void PlayerGUI::resized()
     const int trackLabelHeight = 30;
     trackLabel.setBounds(margin, margin, rightX - margin - spacing, trackLabelHeight);
 
+    int waveformY = margin + trackLabelHeight + spacing;
+    int waveformHeight = windowHeight/4;
+    waveform.setBounds(margin,
+        waveformY,
+        rightX - margin - spacing,
+        waveformHeight);
+
    
     int bottomRowY = windowHeight - margin - buttonHeight;
 
@@ -307,6 +317,8 @@ void PlayerGUI::buttonClicked(juce::Button* button)
             [this](const juce::FileChooser& fc)
             {
                 auto file = fc.getResult();
+
+                waveform.loadFile(file);
 
                 //playlist
                 playlistFiles.clear();
@@ -429,6 +441,11 @@ void PlayerGUI::timerCallback()
         }
         trackSlider.setValue(playerAudio.getPosition(), juce::dontSendNotification);
     }
+
+    //waveform updater
+     waveform.setCurrentPosition(playerAudio.getPosition());
+    
+    
     //playlist
     if (isPlaying && !repeatButton.getToggleState()) {
 		double length = playerAudio.getLength();
@@ -538,6 +555,8 @@ void PlayerGUI::playTrackAtIndex(int index) {
     }
 
 	playerAudio.loadFile(playlistFiles[index]);
+
+    waveform.loadFile(playlistFiles[index]);
 
     isPlaying = true;
 	currentTrackIndex = index;
