@@ -45,7 +45,7 @@ void WaveForm::paint(juce::Graphics& g) {
 		endTime = std::min(endTime, totalLength);
 
 		g.setColour(juce::Colours::navy);
-		thumbnail.drawChannels(g, waveformBounds, startTime, endTime, 1.0f); // draws only between startTime and endTime
+		thumbnail.drawChannel(g, waveformBounds, startTime, endTime,1, 1.0f); // draws only between startTime and endTime
 
 
 		// Drawing the vertical playhead
