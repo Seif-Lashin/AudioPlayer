@@ -65,10 +65,11 @@ public:
 
     void timerCallback() override;
 private:
-    void openFiles();
-	void removeSelectedTrack();
-	void playTrackAtIndex(int index);
-	void playNextTrack();
-	void playPreviousTrack();
+	//playlist functions
+    void openFiles(); //add tracks
+	void removeSelectedTrack(); //remove tracks
+	void playTrackAtIndex(int index); //play specific track
+	void playNextTrack(); //play next track
+	void playPreviousTrack(); //play previous track 
 	void updatePlaylistComboBox();
 };

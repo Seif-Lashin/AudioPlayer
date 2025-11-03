@@ -452,6 +452,7 @@ void PlayerGUI::timerCallback()
 void PlayerGUI::comboBoxChanged(juce::ComboBox* newComboBox) {
     if(newComboBox == &markerList)
         playerAudio.FindPlayback(newComboBox, markerList);
+
     if (newComboBox == &playlist) {
 		int selectedTrackIndex = playlist.getSelectedId() - 1;
 
@@ -512,21 +513,17 @@ void PlayerGUI::removeSelectedTrack() {
 
 	int selectedIndex = selectedId - 1;
 	playlistFiles.remove(selectedIndex);
-    if (selectedIndex == currentTrackIndex) {
-		playerAudio.stop();
+	
+    playerAudio.stop();
 
-        if (playlistFiles.isEmpty()) {
-			currentTrackIndex = -1;
-			isPlaying = false;
-            trackLabel.setText("No Track Loaded", juce::dontSendNotification);
-        }
-        else {
-			int nextIndex = juce::jlimit(0, playlistFiles.size() - 1, selectedIndex);
-            playTrackAtIndex(nextIndex);
-        }
+    if (playlistFiles.isEmpty()) {
+		currentTrackIndex = -1;
+		isPlaying = false;
+        trackLabel.setText("No Track Loaded", juce::dontSendNotification);
     }
-    else if (selectedIndex < currentTrackIndex) {
-		currentTrackIndex--;
+    else {
+		int nextIndex = juce::jlimit(0, playlistFiles.size() - 1, selectedIndex);
+        playTrackAtIndex(nextIndex);
     }
 
 	updatePlaylistComboBox();
