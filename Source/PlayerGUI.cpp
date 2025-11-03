@@ -131,17 +131,16 @@ void PlayerGUI::paint(juce::Graphics& g)
     float rms = playerAudio.getRMS();
     juce::Colour startColour = juce::Colours::purple;
     juce::Colour endColour = juce::Colours::hotpink;
-
+    juce::Colour highlighter = juce::Colours::black;
     juce::Colour NewstartColour = startColour;
     juce::Colour NEWendColour = endColour;
 
     if (playerAudio.getFunState())
     {
-        juce::Colour highlighter = juce::Colours::black;
-        float normalRMS = juce::jlimit(0.0f, 1.0f, rms * 5.0f);
-
-        NEWendColour = endColour.interpolatedWith(highlighter, normalRMS);
-        NewstartColour = startColour.interpolatedWith(highlighter, normalRMS);
+        auto& random = juce::Random:: getSystemRandom();
+        NewstartColour = juce::Colour::fromHSV(random.nextFloat(), 1.0f, 1.0f, 1.0f);
+        NEWendColour = juce::Colour::fromHSV(random.nextFloat(), 1.0f, 1.0f, 1.0f);
+        highlighter = juce::Colour::fromHSV(random.nextFloat(), 1.0f, 1.0f, 1.0f); //hue, sat, brightness
     }
 
     
