@@ -65,6 +65,7 @@ public:
     void savecurrentfilepath(const juce::File& file);
     // when last session is pressed
     juce::File retrievelastfile();
+	double getLastPlayedPosition();
 
     // Markers
     // add current position to marker list

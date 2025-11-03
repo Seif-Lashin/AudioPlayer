@@ -32,6 +32,17 @@ private:
     juce::Label trackLabel;
 	juce::Label speedLabel;
     std::unique_ptr<juce::FileChooser> fileChooser;
+    //playlist
+    juce::ComboBox playlist;
+	juce::TextButton addTrackButton{ "Add to Playlist" };
+	juce::TextButton removeTrackButton{ "Remove from Playlist" };
+	juce::TextButton nextTrackButton{ "Next Track" };
+	juce::TextButton previousTrackButton{ "Previous Track" };
+
+    juce::Array<juce::File> playlistFiles;
+	int currentTrackIndex = -1;
+	bool isPlaying = false;
+
     
     void updateMarkerList();
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PlayerGUI)
@@ -53,4 +64,12 @@ public:
     void comboBoxChanged(juce::ComboBox* newComboBox) override;
 
     void timerCallback() override;
+private:
+	//playlist functions
+    void openFiles(); //add tracks
+	void removeSelectedTrack(); //remove tracks
+	void playTrackAtIndex(int index); //play specific track
+	void playNextTrack(); //play next track
+	void playPreviousTrack(); //play previous track 
+	void updatePlaylistComboBox();
 };

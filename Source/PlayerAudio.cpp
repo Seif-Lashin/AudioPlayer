@@ -27,7 +27,6 @@ PlayerAudio::PlayerAudio()
     //creating the PropertiesFile object and store it in our pointer
     history = std::make_unique<juce::PropertiesFile>(settingsfile, options); 
 	currentTrackName = "No Track Loaded";
-	retrievelastfile(); // trying to retrieve last session file
 }
 
 PlayerAudio::~PlayerAudio() {
@@ -214,14 +213,16 @@ juce::File PlayerAudio::retrievelastfile() {
     juce::String lastfilepath = history->getValue(key, juce::String()); // getting the filepath from our history
     if (lastfilepath.isNotEmpty()) {       // if the path isn't empty
         juce::File lastFile(lastfilepath);// we get the file in it
-        double lastPos = history->getDoubleValue(key_lastPosition, 0.0);
-        loadFile(lastFile);              // loading the file
-        setPosition(lastPos);            // setting the last position
-        return lastFile;
+        if(lastFile.existsAsFile())
+               return lastFile;
     }
     else {
         return juce::File();
     }
+}
+
+double PlayerAudio::getLastPlayedPosition() {
+	return history->getDoubleValue(key_lastPosition, 0.0);
 }
 
 void PlayerAudio::savecurrentfilepath(const juce::File& file) {
