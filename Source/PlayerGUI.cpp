@@ -115,10 +115,12 @@ PlayerGUI::PlayerGUI() : waveform(playerAudio.getFormatManager(), playerAudio.ge
         playlistFiles.add(lastFile);
         updatePlaylistComboBox();
 
-	    playTrackAtIndex(0);
+	    playTrackAtIndex(0, false);
 
 		double lastPos = playerAudio.getLastPlayedPosition();
         playerAudio.setPosition(lastPos);
+        waveform.setCurrentPosition(lastPos);
+        playerAudio.play();
    }
 }
 
@@ -326,7 +328,7 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 				currentTrackIndex = 0;
                 isPlaying = true;
 				updatePlaylistComboBox();
-				playTrackAtIndex(0);
+				playTrackAtIndex(0, true);
 
                 updateMarkerList();
             });
@@ -473,7 +475,7 @@ void PlayerGUI::comboBoxChanged(juce::ComboBox* newComboBox) {
 		int selectedTrackIndex = playlist.getSelectedId() - 1;
 
         if (selectedTrackIndex >= 0 && selectedTrackIndex < playlistFiles.size()) {
-			playTrackAtIndex(selectedTrackIndex);
+			playTrackAtIndex(selectedTrackIndex,true);
         }
     }
 }
@@ -517,7 +519,7 @@ void PlayerGUI::openFiles() {
 
             // If no track is currently playing, start playing the first added track
             if (currentTrackIndex == -1 && !playlistFiles.isEmpty()) {
-                playTrackAtIndex(0);
+                playTrackAtIndex(0,true);
             }
         });
 }
@@ -539,13 +541,13 @@ void PlayerGUI::removeSelectedTrack() {
     }
     else {
 		int nextIndex = juce::jlimit(0, playlistFiles.size() - 1, selectedIndex);
-        playTrackAtIndex(nextIndex);
+        playTrackAtIndex(nextIndex, true);
     }
 
 	updatePlaylistComboBox();
 }
 
-void PlayerGUI::playTrackAtIndex(int index) {
+void PlayerGUI::playTrackAtIndex(int index, bool shouldPlay = true) {
     if (index < 0 || index >= playlistFiles.size()) {
         playerAudio.stop();
         isPlaying = false;
@@ -554,7 +556,7 @@ void PlayerGUI::playTrackAtIndex(int index) {
         return;
     }
 
-	playerAudio.loadFile(playlistFiles[index]);
+	playerAudio.loadFile(playlistFiles[index], shouldPlay);
 
     waveform.loadFile(playlistFiles[index]);
 
@@ -576,11 +578,11 @@ void PlayerGUI::playTrackAtIndex(int index) {
 void PlayerGUI::playNextTrack() {
     if (playlistFiles.isEmpty()) return;
     int nextIndex = (currentTrackIndex + 1) % playlistFiles.size();
-    playTrackAtIndex(nextIndex);
+    playTrackAtIndex(nextIndex,true);
 }
 
 void PlayerGUI::playPreviousTrack() {
     if (playlistFiles.isEmpty()) return;
     int previousIndex = (currentTrackIndex - 1 + playlistFiles.size()) % playlistFiles.size();
-    playTrackAtIndex(previousIndex);
+    playTrackAtIndex(previousIndex,true);
 }

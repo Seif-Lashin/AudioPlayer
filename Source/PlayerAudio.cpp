@@ -69,7 +69,7 @@ void PlayerAudio::releaseResources() {
     resamplingSource->releaseResources();
 }
 
-void PlayerAudio::loadFile(const juce::File& file) {
+void PlayerAudio::loadFile(const juce::File& file, bool shouldPlay = true) {
     if (file.existsAsFile())
     {
         if (auto* reader = formatManager.createReaderFor(file))
@@ -80,9 +80,12 @@ void PlayerAudio::loadFile(const juce::File& file) {
             //metadata extraction using taglib
             getMetadata(file);
 
-            // clearing out the history
-            history->setValue(key_lastPosition, 0.0);
-            history->saveIfNeeded();
+            if (shouldPlay) {
+              // clearing out the history
+              history->setValue(key_lastPosition, 0.0);
+              history->saveIfNeeded();
+            }
+            
 
 
             transportSource.stop();
@@ -107,7 +110,10 @@ void PlayerAudio::loadFile(const juce::File& file) {
 
 
             transportSource.setPosition(0.0); // ensuring it starts at 0.
-            transportSource.start();
+            if (shouldPlay) {
+               transportSource.start();
+            }
+            
         }
     }
 }

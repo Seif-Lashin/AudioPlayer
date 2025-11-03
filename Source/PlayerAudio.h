@@ -43,7 +43,7 @@ public:
     void setEnd(float End);
     float getStart();
     float getEnd();
-    void loadFile(const juce::File& file);
+    void loadFile(const juce::File& file, bool shouldPlay);
     void play();
     void stop();
     void setGain(float gain);

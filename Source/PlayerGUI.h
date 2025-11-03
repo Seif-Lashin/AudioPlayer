@@ -70,7 +70,7 @@ private:
 	//playlist functions
     void openFiles(); //add tracks
 	void removeSelectedTrack(); //remove tracks
-	void playTrackAtIndex(int index); //play specific track
+	void playTrackAtIndex(int index, bool shouldPlay); //play specific track
 	void playNextTrack(); //play next track
 	void playPreviousTrack(); //play previous track 
 	void updatePlaylistComboBox();
