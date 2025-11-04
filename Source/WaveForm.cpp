@@ -44,7 +44,7 @@ void WaveForm::paint(juce::Graphics& g) {
 		double endTime = startTime + visibleWave; 
 		endTime = std::min(endTime, totalLength);
 
-		g.setColour(juce::Colours::navy);
+		g.setColour(juce::Colours::hotpink);
 		thumbnail.drawChannel(g, waveformBounds, startTime, endTime,1, 1.0f); // draws only between startTime and endTime
 
 

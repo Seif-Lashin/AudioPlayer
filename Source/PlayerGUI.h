@@ -4,14 +4,14 @@
 #include "WaveForm.h"
 
 
-class PlayerGUI : public juce::AudioAppComponent,
+class PlayerGUI : public juce::Component,
     public juce::Button::Listener,
     public juce::Slider::Listener,
     public juce::Timer,
     public juce::ComboBox::Listener
 {
 private:
-    PlayerAudio playerAudio;
+    PlayerAudio& playerAudio;
     WaveForm waveform;
     juce::TextButton loadButton{ "Load File" };
     /*juce::TextButton restartButton{ "Start" };
@@ -67,15 +67,11 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PlayerGUI)
 
 public:
-    PlayerGUI();
+    PlayerGUI(PlayerAudio& audioToControl);
     ~PlayerGUI() override;
 
     void paint(juce::Graphics& g) override;
     void resized() override;
-
-    void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
-    void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override;
-    void releaseResources() override;
 
     void buttonClicked(juce::Button* button) override;
     void sliderValueChanged(juce::Slider* slider) override;

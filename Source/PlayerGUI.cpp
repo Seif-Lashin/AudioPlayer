@@ -1,7 +1,8 @@
 #include "PlayerGUI.h"
 #include <vector> // Make sure this is included for std::vector
 
-PlayerGUI::PlayerGUI() : waveform(playerAudio.getFormatManager(), playerAudio.getThumbnailCache()) // to not duplicate data, formatmanager reads files, thumbnailcache is a shared storage
+PlayerGUI::PlayerGUI(PlayerAudio& audioToControl) :playerAudio(audioToControl), 
+waveform(playerAudio.getFormatManager(), playerAudio.getThumbnailCache()) // to not duplicate data, formatmanager reads files, thumbnailcache is a shared storage
 {
         // playPauseButton
         playIcon = juce::Drawable::createFromImageData(BinaryData::play_svg, BinaryData::play_svgSize);
@@ -70,52 +71,88 @@ PlayerGUI::PlayerGUI() : waveform(playerAudio.getFormatManager(), playerAudio.ge
 
         // loadButton
         loadButton.addListener(this);
+        loadButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black.withAlpha(0.3f));
+        loadButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
+
         addAndMakeVisible(loadButton);
 
         // addMarker
         addMarker.addListener(this);
+        addMarker.setColour(juce::TextButton::buttonColourId, juce::Colours::black.withAlpha(0.3f));
+        addMarker.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
+
         addAndMakeVisible(addMarker);
 
         // funButton
         funButton.addListener(this);
+        funButton.setColour(juce::TextButton::buttonOnColourId, juce::Colours::hotpink.withAlpha(0.5f));
+        funButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black.withAlpha(0.3f));
+        funButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
+        funButton.setColour(juce::TextButton::textColourOnId, juce::Colours::white);
+
         addAndMakeVisible(funButton);
 
         // segmentButton
         segmentButton.addListener(this);
+        segmentButton.setColour(juce::TextButton::buttonOnColourId, juce::Colours::hotpink.withAlpha(0.5f));
+        segmentButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black.withAlpha(0.3f));
+        segmentButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
+        segmentButton.setColour(juce::TextButton::textColourOnId, juce::Colours::white);
+
         addAndMakeVisible(segmentButton);
 
         // addTrackButton
         addTrackButton.addListener(this);
+        addTrackButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black.withAlpha(0.3f));
+        addTrackButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
+
         addAndMakeVisible(addTrackButton);
 
         // removeTrackButton
         removeTrackButton.addListener(this);
+        removeTrackButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black.withAlpha(0.3f));
+        removeTrackButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
+
         addAndMakeVisible(removeTrackButton);
 
         // playlist ComboBox
-        addAndMakeVisible(playlist);
         playlist.addListener(this);
         playlist.setTextWhenNoChoicesAvailable("No Tracks in Playlist<3");
         playlist.setTextWhenNothingSelected("Select a Track");
 
+        playlist.setColour(juce::ComboBox::backgroundColourId, juce::Colours::black.withAlpha(0.3f));
+        playlist.setColour(juce::ComboBox::textColourId, juce::Colours::white);
+        playlist.setColour(juce::ComboBox::outlineColourId, juce::Colours::white.withAlpha(0.5f));
+        playlist.setColour(juce::ComboBox::arrowColourId, juce::Colours::hotpink);
+        playlist.setColour(juce::ComboBox::buttonColourId, juce::Colours::transparentBlack);
+
+        addAndMakeVisible(playlist);
         // trackLabel
         trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
         trackLabel.setJustificationType(juce::Justification::centred);
         trackLabel.setColour(juce::Label::textColourId, juce::Colours::white);
         trackLabel.setFont(juce::Font(30.0f, juce::Font::bold));
-        addAndMakeVisible(trackLabel);
 
+        addAndMakeVisible(trackLabel);
         // speedLabel
-        addAndMakeVisible(speedLabel);
         speedLabel.setText("Speed:", juce::dontSendNotification);
         speedLabel.setJustificationType(juce::Justification::centredRight);
 
+        speedLabel.setColour(juce::Label::textColourId, juce::Colours::white.withAlpha(0.8f));
+
+        addAndMakeVisible(speedLabel);
         // markerList ComboBox
-        addAndMakeVisible(markerList);
         markerList.addListener(this);
         markerList.setTextWhenNoChoicesAvailable("No Markers Available<3");
         markerList.setTextWhenNothingSelected("Select a Marker");
 
+        markerList.setColour(juce::ComboBox::backgroundColourId, juce::Colours::black.withAlpha(0.3f));
+        markerList.setColour(juce::ComboBox::textColourId, juce::Colours::white);
+        markerList.setColour(juce::ComboBox::outlineColourId, juce::Colours::white.withAlpha(0.5f));
+        markerList.setColour(juce::ComboBox::arrowColourId, juce::Colours::hotpink);
+        markerList.setColour(juce::ComboBox::buttonColourId, juce::Colours::transparentBlack);
+        
+        addAndMakeVisible(markerList);
         //Waveform
         addAndMakeVisible(waveform);
 
@@ -137,6 +174,14 @@ PlayerGUI::PlayerGUI() : waveform(playerAudio.getFormatManager(), playerAudio.ge
         volumeSlider.setValue(0.5);
         volumeSlider.addListener(this);
 		volumeSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 40, 20);
+        
+        volumeSlider.setColour(juce::Slider::backgroundColourId, juce::Colours::black.withAlpha(0.3f));
+        volumeSlider.setColour(juce::Slider::trackColourId, juce::Colours::hotpink);
+        volumeSlider.setColour(juce::Slider::thumbColourId, juce::Colours::white);
+        volumeSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colours::white);
+        volumeSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colours::black.withAlpha(0.3f));
+        volumeSlider.setColour(juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
+
         addAndMakeVisible(volumeSlider);
 
         // trackSlider
@@ -160,6 +205,14 @@ PlayerGUI::PlayerGUI() : waveform(playerAudio.getFormatManager(), playerAudio.ge
         trackSlider.setValue(0.0);
         trackSlider.setTextBoxStyle(juce::Slider::TextBoxAbove, false, 80, 20);
         trackSlider.addListener(this);
+        
+        trackSlider.setColour(juce::Slider::backgroundColourId, juce::Colours::black.withAlpha(0.3f));
+        trackSlider.setColour(juce::Slider::trackColourId, juce::Colours::hotpink);
+        trackSlider.setColour(juce::Slider::thumbColourId, juce::Colours::white);
+        trackSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colours::white);
+        trackSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colours::transparentBlack);
+        trackSlider.setColour(juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
+        
         addAndMakeVisible(trackSlider);
 
         // speedSlider
@@ -170,6 +223,14 @@ PlayerGUI::PlayerGUI() : waveform(playerAudio.getFormatManager(), playerAudio.ge
         speedSlider.textFromValueFunction = [](double value) { return juce::String(value, 2) + "x"; };
         speedSlider.valueFromTextFunction = [](const juce::String& text) { return text.removeCharacters("x").getDoubleValue(); };
         speedSlider.addListener(this);
+        
+        speedSlider.setColour(juce::Slider::backgroundColourId, juce::Colours::black.withAlpha(0.3f));
+        speedSlider.setColour(juce::Slider::trackColourId, juce::Colours::hotpink);
+        speedSlider.setColour(juce::Slider::thumbColourId, juce::Colours::white);
+        speedSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colours::white);
+        speedSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colours::black.withAlpha(0.3f));
+        speedSlider.setColour(juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
+
         addAndMakeVisible(speedSlider);
 
         // segmentSlider
@@ -181,11 +242,15 @@ PlayerGUI::PlayerGUI() : waveform(playerAudio.getFormatManager(), playerAudio.ge
         playerAudio.setStart(0.0f);
         playerAudio.setEnd(playerAudio.getEnd());
         segmentSlider.addListener(this);
+        
+        segmentSlider.setColour(juce::Slider::backgroundColourId, juce::Colours::black.withAlpha(0.3f));
+        segmentSlider.setColour(juce::Slider::trackColourId, juce::Colours::hotpink.withAlpha(0.5f));
+        segmentSlider.setColour(juce::Slider::thumbColourId, juce::Colours::white);
+        
         addAndMakeVisible(segmentSlider);
         segmentSlider.setVisible(segmentButton.getToggleState());
 
         setSize(1000, 400);
-        setAudioChannels(0, 2);
         startTimer(60);
 
         juce::File lastFile = playerAudio.retrievelastfile();
@@ -204,7 +269,6 @@ PlayerGUI::PlayerGUI() : waveform(playerAudio.getFormatManager(), playerAudio.ge
 
 PlayerGUI::~PlayerGUI()
 {
-    shutdownAudio();
     setLookAndFeel(nullptr);
 }
 
@@ -212,8 +276,8 @@ void PlayerGUI::paint(juce::Graphics& g)
 {
 
     float rms = playerAudio.getRMS();
-    juce::Colour startColour = juce::Colours::purple;
-    juce::Colour endColour = juce::Colours::hotpink;
+    juce::Colour startColour = juce::Colours::black;
+    juce::Colour endColour = juce::Colour(0xff2d0041);
     juce::Colour highlighter = juce::Colours::black;
     juce::Colour NewstartColour = startColour;
     juce::Colour NEWendColour = endColour;
@@ -369,22 +433,6 @@ void PlayerGUI::resized()
 	rightSettingsGroup.performLayout(rightBound.toFloat());
 }
 
-
-void PlayerGUI::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
-{
-    playerAudio.prepareToPlay(samplesPerBlockExpected, sampleRate);
-}
-
-void PlayerGUI::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
-{
-    playerAudio.getNextAudioBlock(bufferToFill);
-}
-
-void PlayerGUI::releaseResources()
-{
-    playerAudio.releaseResources();
-}
-
 void PlayerGUI::buttonClicked(juce::Button* button)
 {
 
@@ -493,7 +541,7 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 void PlayerGUI::sliderValueChanged(juce::Slider* slider)
 {
     if (slider == &volumeSlider)
-        playerAudio.setGain((float)slider->getValue());
+        playerAudio.setGainMute((float)slider->getValue());
 
     if (slider == &trackSlider)
     {
