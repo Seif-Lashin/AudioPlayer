@@ -100,9 +100,7 @@ void PlayerAudio::loadFile(const juce::File& file) {
 
             transportSource.setPosition(0.0); // ensuring it starts at 0.
           
-             transportSource.start();
-            
-            
+            transportSource.start();
         }
     }
 }
