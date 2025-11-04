@@ -3,22 +3,89 @@
 
 PlayerGUI::PlayerGUI() : waveform(playerAudio.getFormatManager(), playerAudio.getThumbnailCache()) // to not duplicate data, formatmanager reads files, thumbnailcache is a shared storage
 {
+	//playPauseButton
+	playIcon = juce::Drawable::createFromImageData(BinaryData::play_svg, BinaryData::play_svgSize);
+	pauseIcon = juce::Drawable::createFromImageData(BinaryData::pause_svg, BinaryData::pause_svgSize);
+	playPauseButton = std::make_unique<juce::DrawableButton>("Play/Pause", juce::DrawableButton::ImageFitted);
+    playPauseButton->setClickingTogglesState(true);
+	playPauseButton->setImages(playIcon.get(), nullptr, nullptr, nullptr, pauseIcon.get());
+
+	playPauseButton->setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
+    playPauseButton->setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
+	playPauseButton->addListener(this);
+	addAndMakeVisible(playPauseButton.get());
+    //repeatButton
+    repeatOffIcon = juce::Drawable::createFromImageData(BinaryData::repeat_svg, BinaryData::repeat_svgSize);
+    repeatOnIcon = juce::Drawable::createFromImageData(BinaryData::repeatOn_svg, BinaryData::repeatOn_svgSize);
+    repeatButton = std::make_unique<juce::DrawableButton>("Repeat", juce::DrawableButton::ImageFitted);
+    repeatButton->setClickingTogglesState(true);
+    repeatButton->setImages(repeatOffIcon.get(), nullptr, nullptr, nullptr, repeatOnIcon.get());
+
+    repeatButton->setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
+    repeatButton->setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
+    repeatButton->addListener(this);
+    addAndMakeVisible(repeatButton.get());
+    //nextButton
+    nextIcon = juce::Drawable::createFromImageData(BinaryData::next_svg, BinaryData::next_svgSize);
+    nextButton = std::make_unique<juce::DrawableButton>("Next", juce::DrawableButton::ImageFitted);
+    nextButton->setImages(nextIcon.get());
+
+    nextButton->setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
+    nextButton->addListener(this);
+    addAndMakeVisible(nextButton.get());
+
+	//prevButton
+    prevIcon = juce::Drawable::createFromImageData(BinaryData::prev_svg, BinaryData::prev_svgSize);
+    prevButton = std::make_unique<juce::DrawableButton>("Previous", juce::DrawableButton::ImageFitted);
+    prevButton->setImages(prevIcon.get());
+
+    prevButton->setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
+    prevButton->addListener(this);
+    addAndMakeVisible(prevButton.get());
+
+    //forwardButton
+    forwardIcon = juce::Drawable::createFromImageData(BinaryData::forward_svg, BinaryData::forward_svgSize);
+    forwardButton = std::make_unique<juce::DrawableButton>("Forward", juce::DrawableButton::ImageFitted);
+    forwardButton->setImages(forwardIcon.get());
+
+    forwardButton->setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
+    forwardButton->addListener(this);
+    addAndMakeVisible(forwardButton.get());
+	//replayButton
+    replayIcon = juce::Drawable::createFromImageData(BinaryData::replay_svg, BinaryData::replay_svgSize);
+    replayButton = std::make_unique<juce::DrawableButton>("Replay", juce::DrawableButton::ImageFitted);
+    replayButton->setImages(replayIcon.get());
+
+    replayButton->setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
+    replayButton->addListener(this);
+    addAndMakeVisible(replayButton.get());
+	//muteButton
+    muteOffIcon = juce::Drawable::createFromImageData(BinaryData::volumeOff_svg, BinaryData::volumeOff_svgSize);
+    muteOnIcon = juce::Drawable::createFromImageData(BinaryData::volumeUp_svg, BinaryData::volumeUp_svgSize);
+    muteButton = std::make_unique<juce::DrawableButton>("Mute", juce::DrawableButton::ImageFitted);
+    muteButton->setClickingTogglesState(true);
+    muteButton->setImages(muteOnIcon.get(), nullptr, nullptr, nullptr, muteOffIcon.get());
+
+    muteButton->setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
+    muteButton->setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
+    muteButton->addListener(this);
+    addAndMakeVisible(muteButton.get());
+
     // Add buttons
-    for (auto* btn : { &loadButton, &restartButton , &stopButton, &jumpForward, &jumpBackward,
-         &endButton, &playButton, &addMarker })//text buttons
+    for (auto* btn : { &loadButton, &addMarker })//text buttons
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
     }
 
-    for (auto* btn : { &repeatButton, &muteButton, &funButton, &segmentButton }) //toggle buttons
+    for (auto* btn : { &funButton, &segmentButton }) //toggle buttons
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
     }
 
 	//playlist
-    for(auto* btn : { &addTrackButton, &removeTrackButton, &nextTrackButton, &previousTrackButton })
+    for(auto* btn : { &addTrackButton, &removeTrackButton })
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -115,13 +182,12 @@ PlayerGUI::PlayerGUI() : waveform(playerAudio.getFormatManager(), playerAudio.ge
         playlistFiles.add(lastFile);
         updatePlaylistComboBox();
 
-	    
-
 		double lastPos = playerAudio.getLastPlayedPosition();
         playTrackAtIndex(0);
         playerAudio.setPosition(lastPos);
         waveform.setCurrentPosition(lastPos);
-        
+        playerAudio.stop();
+		playPauseButton->setToggleState(false, juce::dontSendNotification);
    }
 }
 
@@ -198,9 +264,6 @@ void PlayerGUI::resized()
 	removeTrackButton.setBounds(rightX + halfWidth + spacing, currentY, halfWidth, buttonHeight);
 	currentY += buttonHeight + spacing;
 
-	previousTrackButton.setBounds(rightX, currentY, halfWidth, buttonHeight);
-	nextTrackButton.setBounds(rightX + halfWidth + spacing, currentY, halfWidth, buttonHeight);
-
     const int trackLabelHeight = 30;
     trackLabel.setBounds(margin, margin, rightX - margin - spacing, trackLabelHeight);
 
@@ -224,10 +287,10 @@ void PlayerGUI::resized()
     int mainAreaRightEdge = rightX - spacing;
 
     int currentX = mainAreaRightEdge - smallButtonWidth;
-    repeatButton.setBounds(currentX, bottomRowY, smallButtonWidth, buttonHeight);
+    repeatButton->setBounds(currentX, bottomRowY, smallButtonWidth, buttonHeight);
 
     currentX -= (smallButtonWidth + spacing);
-    muteButton.setBounds(currentX, bottomRowY, smallButtonWidth, buttonHeight);
+    muteButton->setBounds(currentX, bottomRowY, smallButtonWidth, buttonHeight);
 
 	currentX -= (smallButtonWidth + spacing);
 	segmentButton.setBounds(currentX, bottomRowY, smallButtonWidth, buttonHeight);
@@ -241,12 +304,11 @@ void PlayerGUI::resized()
 
     std::vector<juce::Button*> orderedButtons = {
         &loadButton,
-        &restartButton,
-        &jumpBackward,
-        &playButton,
-        &jumpForward,
-        &endButton,
-        &stopButton,
+        prevButton.get(),
+        replayButton.get(),
+        playPauseButton.get(),
+        forwardButton.get(),
+        nextButton.get()
     };
 
     int numButtons = (int)orderedButtons.size();
@@ -335,47 +397,37 @@ void PlayerGUI::buttonClicked(juce::Button* button)
             });
     }
 
-    if (button == &restartButton)
+    if(button == playPauseButton.get())
     {
-        playerAudio.Jumptostart();
-        playerAudio.play();
-		isPlaying = true;
-    }
+        if (playPauseButton->getToggleState()) {
+            playerAudio.play();
+            isPlaying = true;
+        }
+        else {
+			playerAudio.stop();
+            isPlaying = false;
+        }
+	}
 
-    if (button == &stopButton)
-    {
-        playerAudio.stop(); 
-		isPlaying = false;
-    }
-
-    if (button == &jumpForward) {
+    if (button == forwardButton.get()) {
         playerAudio.plus10(playerAudio.getPosition());
     }
 
-    if (button == &jumpBackward) {
+    if (button == replayButton.get()) {
         playerAudio.minus10(playerAudio.getPosition());
     }
 
-    if (button == &repeatButton)
+    if (button == repeatButton.get())
     {
-        playerAudio.repeatToggle(repeatButton.getToggleState());
+        playerAudio.repeatToggle(repeatButton->getToggleState());
     }
+
     if (button == &funButton) {
         playerAudio.funToggle(funButton.getToggleState());
     }
 
-    if (button == &endButton)
-    {
-        playerAudio.Jumptoend();
-    }
-    if (button == &playButton)
-    {
-        playerAudio.play();
-		isPlaying = true;
-    }
-
-    if (button == &muteButton) {
-        playerAudio.mute(muteButton.getToggleState());
+    if (button == muteButton.get()) {
+        playerAudio.mute(muteButton->getToggleState());
     }
 
     if (button == &addMarker) {
@@ -400,12 +452,19 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 		removeSelectedTrack();
     }
     
-    if (button == &nextTrackButton) {
+    if (button == nextButton.get()) {
 		playNextTrack();
     }
 
-    if (button == &previousTrackButton) {
-		playPreviousTrack();
+    if (button == prevButton.get()) {
+        if(playerAudio.getPosition() < 1.0) {
+            playPreviousTrack();
+        }
+        else {
+            playerAudio.Jumptostart();
+            playerAudio.play();
+            isPlaying = true;
+        }
     }
 }
 
@@ -443,6 +502,7 @@ void PlayerGUI::timerCallback()
             playerAudio.segmentPlayCheck();
         }
         trackSlider.setValue(playerAudio.getPosition(), juce::dontSendNotification);
+		playPauseButton->setToggleState(playerAudio.IsPlaying(), juce::dontSendNotification);
     }
 
     //waveform updater
@@ -450,7 +510,7 @@ void PlayerGUI::timerCallback()
     
     
     //playlist
-    if (isPlaying && !repeatButton.getToggleState()) {
+    if (isPlaying && !repeatButton->getToggleState()) {
 		double length = playerAudio.getLength();
         if (length > 0 && playerAudio.getPosition() >= length) {
 			playNextTrack();

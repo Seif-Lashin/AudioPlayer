@@ -4,6 +4,18 @@
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1">
   <MAINGROUP id="t9UaeB" name="AudioPlayer">
     <GROUP id="{DD449CBC-910E-0AEB-CA94-D2DD9636D007}" name="Source">
+      <GROUP id="{E41EB612-DCF0-49F6-C65E-177BD165A656}" name="resources">
+        <FILE id="tdyZSa" name="forward.svg" compile="0" resource="1" file="../resources/forward.svg"/>
+        <FILE id="NZrBA1" name="pause.svg" compile="0" resource="1" file="../resources/pause.svg"/>
+        <FILE id="DD1toD" name="play.svg" compile="0" resource="1" file="../resources/play.svg"/>
+        <FILE id="ikW6Cr" name="repeat.svg" compile="0" resource="1" file="../resources/repeat.svg"/>
+        <FILE id="KGbTvt" name="repeatOn.svg" compile="0" resource="1" file="../resources/repeatOn.svg"/>
+        <FILE id="PvPhF9" name="replay.svg" compile="0" resource="1" file="../resources/replay.svg"/>
+        <FILE id="AcakUd" name="next.svg" compile="0" resource="1" file="../resources/next.svg"/>
+        <FILE id="mlo3oT" name="prev.svg" compile="0" resource="1" file="../resources/prev.svg"/>
+        <FILE id="iGszuQ" name="volumeOff.svg" compile="0" resource="1" file="../resources/volumeOff.svg"/>
+        <FILE id="GsoMjg" name="volumeUp.svg" compile="0" resource="1" file="../resources/volumeUp.svg"/>
+      </GROUP>
       <GROUP id="{B646E16E-BF63-3A4A-D14F-278F354B31AA}" name="gui">
         <FILE id="ftnvUw" name="PlayerGUI.cpp" compile="1" resource="0" file="Source/PlayerGUI.cpp"/>
         <FILE id="MB6Dpl" name="PlayerGUI.h" compile="0" resource="0" file="Source/PlayerGUI.h"/>
