@@ -238,6 +238,7 @@ void PlayerAudio::savecurrentfilepath(const juce::File& file) {
 }
 
 void PlayerAudio::addPositionAsMarker() {
+    if (trackMarkers.size() == 20) return;
     double current = getPosition();
     for (double marker : trackMarkers) {
         if (std::abs(marker - current) < 1.0) {
