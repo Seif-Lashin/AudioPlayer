@@ -1,119 +1,103 @@
 #include "MainComponent.h"
 
-MainComponent::MainComponent()
+
+ std::unique_ptr<juce::PropertiesFile> MainComponent::historySetup(juce::String name)
 {
-    formatManager.registerBasicFormats();
+	juce::PropertiesFile::Options options;
+	options.applicationName = "Simple Audio Player";
+	options.filenameSuffix = name;
+	options.osxLibrarySubFolder = "Application Support";
+	options.storageFormat = juce::PropertiesFile::storeAsXML;
+	options.millisecondsBeforeSaving = 0;
+	return std::make_unique<juce::PropertiesFile>(options.getDefaultFile(), options);
+}
 
-    // Add buttons
-    for (auto* btn : { &loadButton, &restartButton , &stopButton })
-    {
-        btn->addListener(this);
-        addAndMakeVisible(btn);
-    }
+MainComponent::MainComponent() :
+	historyA(historySetup("DeckA settings")),
+	historyB(historySetup("DeckB settings")),
+	playerA(*historyA), playerB(*historyB), guiA(playerA), guiB(playerB)
+{
+	addAndMakeVisible(guiA);
+	addAndMakeVisible(guiB);
 
-    // Volume slider
-    volumeSlider.setRange(0.0, 1.0, 0.01);
-    volumeSlider.setValue(0.5);
-    volumeSlider.addListener(this);
-    addAndMakeVisible(volumeSlider);
+	mixerSlider.setRange(0.0, 1.0, 0.01);
+	mixerSlider.setValue(0.5);
+	mixerSlider.addListener(this);
+	mixerSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+	mixerSlider.setColour(juce::Slider::backgroundColourId, juce::Colours::black.withAlpha(0.3f));
+	mixerSlider.setColour(juce::Slider::trackColourId, juce::Colours::hotpink);
+	mixerSlider.setColour(juce::Slider::thumbColourId, juce::Colours::white);
+	mixerSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colours::white);
+	mixerSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colours::black.withAlpha(0.3f));
+	mixerSlider.setColour(juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
+	addAndMakeVisible(mixerSlider);
 
-    setSize(500, 250);
-    setAudioChannels(0, 2);
+	labelA.setText("Deck A", juce::dontSendNotification);
+	labelB.setText("Deck B", juce::dontSendNotification);
+	labelA.setJustificationType(juce::Justification::centredRight);
+	labelB.setJustificationType(juce::Justification::centredLeft);
+	addAndMakeVisible(labelA);
+	addAndMakeVisible(labelB);
+
+	mixerSource.addInputSource(&playerA, false);
+	mixerSource.addInputSource(&playerB, false);
+
+	playerA.setMixerGain(0.5f);
+	playerB.setMixerGain(0.5f);
+
+    setSize(1200, 850);
+	setAudioChannels(0, 2); // no inputs, two outputs
 }
 
 MainComponent::~MainComponent()
 {
     shutdownAudio();
+	mixerSource.removeAllInputs();
 }
 
 void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
-    transportSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
+   mixerSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
 
 void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
 {
-    transportSource.getNextAudioBlock(bufferToFill);
+    mixerSource.getNextAudioBlock(bufferToFill);
 }
 
 void MainComponent::releaseResources()
 {
-    transportSource.releaseResources();
+    mixerSource.releaseResources();
 }
 
 void MainComponent::paint(juce::Graphics& g)
 {
-    g.fillAll(juce::Colours::darkgrey);
+	g.fillAll(juce::Colours::black);
+
+	auto mixerBounds = getLocalBounds().removeFromBottom(40);
+	g.setColour(juce::Colours::black);
+	g.fillRect(mixerBounds);
 }
 
 void MainComponent::resized()
 {
-    int y = 20;
-    loadButton.setBounds(20, y, 100, 40);
-    restartButton.setBounds(140, y, 80, 40);
-    stopButton.setBounds(240, y, 80, 40);
-    /*prevButton.setBounds(340, y, 80, 40);
-    nextButton.setBounds(440, y, 80, 40);*/
+	auto bounds = getLocalBounds();
+	auto mixerBounds = bounds.removeFromBottom(40);
 
-    volumeSlider.setBounds(20, 100, getWidth() - 40, 30);
-}
-
-void MainComponent::buttonClicked(juce::Button* button)
-{
-    if (button == &loadButton)
-    {
-        juce::FileChooser chooser("Select audio files...",
-            juce::File{},
-            "*.wav;*.mp3");
-
-        fileChooser = std::make_unique<juce::FileChooser>(
-            "Select an audio file...",
-            juce::File{},
-            "*.wav;*.mp3");
-
-        fileChooser->launchAsync(
-            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
-            [this](const juce::FileChooser& fc)
-            {
-                auto file = fc.getResult();
-                if (file.existsAsFile())
-                {
-                    if (auto* reader = formatManager.createReaderFor(file))
-                    {
-                        // 🔑 Disconnect old source first
-                        transportSource.stop();
-                        transportSource.setSource(nullptr);
-                        readerSource.reset();
-
-                        // Create new reader source
-                        readerSource = std::make_unique<juce::AudioFormatReaderSource>(reader, true);
-
-                        // Attach safely
-                        transportSource.setSource(readerSource.get(),
-                            0,
-                            nullptr,
-                            reader->sampleRate);
-                        transportSource.start();
-                    }
-                }
-            });
-    }
-
-    if (button == &restartButton)
-    {
-        transportSource.start();
-    }
-
-    if (button == &stopButton)
-    {
-        transportSource.stop();
-        transportSource.setPosition(0.0);
-    }
-
+	guiA.setBounds(bounds.removeFromTop(bounds.getHeight() / 2));
+	guiB.setBounds(bounds);
+	labelA.setBounds(mixerBounds.removeFromLeft(mixerBounds.getWidth() / 2 - 100) );
+	mixerSlider.setBounds(mixerBounds.removeFromLeft(200));
+	labelB.setBounds(mixerBounds);
 }
 
 void MainComponent::sliderValueChanged(juce::Slider* slider)
 {
-    if (slider == &volumeSlider)
-        transportSource.setGain((float)slider->getValue());
+	if(slider == &mixerSlider)
+	{
+		float gainA = (float)(1.0 - mixerSlider.getValue());
+		float gainB = (float)(mixerSlider.getValue());
+		playerA.setMixerGain(gainA);
+		playerB.setMixerGain(gainB);
+	}
 }

@@ -1,133 +1,274 @@
 #include "PlayerGUI.h"
 #include <vector> // Make sure this is included for std::vector
 
-PlayerGUI::PlayerGUI() : waveform(playerAudio.getFormatManager(), playerAudio.getThumbnailCache()) // to not duplicate data, formatmanager reads files, thumbnailcache is a shared storage
+PlayerGUI::PlayerGUI(PlayerAudio& audioToControl) :playerAudio(audioToControl), 
+waveform(playerAudio.getFormatManager(), playerAudio.getThumbnailCache()) // to not duplicate data, formatmanager reads files, thumbnailcache is a shared storage
 {
-    // Add buttons
-    for (auto* btn : { &loadButton, &restartButton , &stopButton, &jumpForward, &jumpBackward,
-         &endButton, &playButton, &addMarker })//text buttons
-    {
-        btn->addListener(this);
-        addAndMakeVisible(btn);
-    }
+        // playPauseButton
+        playIcon = juce::Drawable::createFromImageData(BinaryData::play_svg, BinaryData::play_svgSize);
+        pauseIcon = juce::Drawable::createFromImageData(BinaryData::pause_svg, BinaryData::pause_svgSize);
+        playPauseButton = std::make_unique<juce::DrawableButton>("Play/Pause", juce::DrawableButton::ImageFitted);
+        playPauseButton->setClickingTogglesState(true);
+        playPauseButton->setImages(playIcon.get(), nullptr, nullptr, nullptr, pauseIcon.get());
+        playPauseButton->setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
+        playPauseButton->setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
+        playPauseButton->addListener(this);
+        addAndMakeVisible(playPauseButton.get());
 
-    for (auto* btn : { &repeatButton, &muteButton, &funButton, &segmentButton }) //toggle buttons
-    {
-        btn->addListener(this);
-        addAndMakeVisible(btn);
-    }
+        // repeatButton
+        repeatOffIcon = juce::Drawable::createFromImageData(BinaryData::repeat_svg, BinaryData::repeat_svgSize);
+        repeatOnIcon = juce::Drawable::createFromImageData(BinaryData::repeatOn_svg, BinaryData::repeatOn_svgSize);
+        repeatButton = std::make_unique<juce::DrawableButton>("Repeat", juce::DrawableButton::ImageFitted);
+        repeatButton->setClickingTogglesState(true);
+        repeatButton->setImages(repeatOffIcon.get(), nullptr, nullptr, nullptr, repeatOnIcon.get());
+        repeatButton->setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
+        repeatButton->setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
+        repeatButton->addListener(this);
+        addAndMakeVisible(repeatButton.get());
 
-	//playlist
-    for(auto* btn : { &addTrackButton, &removeTrackButton, &nextTrackButton, &previousTrackButton })
-    {
-        btn->addListener(this);
-        addAndMakeVisible(btn);
-	}
-	addAndMakeVisible(playlist);
-	playlist.addListener(this);
-    playlist.setTextWhenNoChoicesAvailable("No Tracks in Playlist<3");
-	playlist.setTextWhenNothingSelected("Select a Track");
+        // nextButton
+        nextIcon = juce::Drawable::createFromImageData(BinaryData::next_svg, BinaryData::next_svgSize);
+        nextButton = std::make_unique<juce::DrawableButton>("Next", juce::DrawableButton::ImageFitted);
+        nextButton->setImages(nextIcon.get());
+        nextButton->setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
+        nextButton->addListener(this);
+        addAndMakeVisible(nextButton.get());
 
-    //title Logic
-    trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
-    trackLabel.setJustificationType(juce::Justification::centred);
-    trackLabel.setColour(juce::Label::textColourId, juce::Colours::white);
-    trackLabel.setFont(juce::Font(30.0f, juce::Font::bold));
-    addAndMakeVisible(trackLabel);
+        // prevButton
+        prevIcon = juce::Drawable::createFromImageData(BinaryData::prev_svg, BinaryData::prev_svgSize);
+        prevButton = std::make_unique<juce::DrawableButton>("Previous", juce::DrawableButton::ImageFitted);
+        prevButton->setImages(prevIcon.get());
+        prevButton->setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
+        prevButton->addListener(this);
+        addAndMakeVisible(prevButton.get());
 
-    // Marker logic
-    addAndMakeVisible(markerList);
-    markerList.addListener(this);
-    markerList.setTextWhenNoChoicesAvailable("No Markers Available<3");
-    markerList.setTextWhenNothingSelected("Select a Marker");
+        // forwardButton
+        forwardIcon = juce::Drawable::createFromImageData(BinaryData::forward_svg, BinaryData::forward_svgSize);
+        forwardButton = std::make_unique<juce::DrawableButton>("Forward", juce::DrawableButton::ImageFitted);
+        forwardButton->setImages(forwardIcon.get());
+        forwardButton->setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
+        forwardButton->addListener(this);
+        addAndMakeVisible(forwardButton.get());
 
-    //WaveForm
-    addAndMakeVisible(waveform);
+        // replayButton
+        replayIcon = juce::Drawable::createFromImageData(BinaryData::replay_svg, BinaryData::replay_svgSize);
+        replayButton = std::make_unique<juce::DrawableButton>("Replay", juce::DrawableButton::ImageFitted);
+        replayButton->setImages(replayIcon.get());
+        replayButton->setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
+        replayButton->addListener(this);
+        addAndMakeVisible(replayButton.get());
 
-    // Volume slider
-    volumeSlider.textFromValueFunction = [](double value) {//cahnging value to percentage
-        double percent = value * 100;
-        return juce::String((int)percent) + "%";
-        };
-    volumeSlider.valueFromTextFunction = [](const juce::String& text) {//changing percentage to value
-        int percentagePos = text.indexOf("%");
-        if (percentagePos != -1) {
-            juce::String percent = text.substring(0, percentagePos);
-            return percent.getDoubleValue() / 100.0;
-        }
-        return text.getDoubleValue() / 100.0;
-        };
-    volumeSlider.setRange(0.0, 1.0, 0.01);
-    volumeSlider.setValue(0.5);
+        // muteButton
+        muteOffIcon = juce::Drawable::createFromImageData(BinaryData::volumeOff_svg, BinaryData::volumeOff_svgSize);
+        muteOnIcon = juce::Drawable::createFromImageData(BinaryData::volumeUp_svg, BinaryData::volumeUp_svgSize);
+        muteButton = std::make_unique<juce::DrawableButton>("Mute", juce::DrawableButton::ImageFitted);
+        muteButton->setClickingTogglesState(true);
+        muteButton->setImages(muteOnIcon.get(), nullptr, nullptr, nullptr, muteOffIcon.get());
+        muteButton->setColour(juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
+        muteButton->setColour(juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
+        muteButton->addListener(this);
+        addAndMakeVisible(muteButton.get());
 
-    // Track slider
-    trackSlider.textFromValueFunction = [](double value) {// changing the value to a M:SS
-        int totalSeconds = (int)value;
-        int minutes = totalSeconds / 60;
-        int seconds = totalSeconds % 60;
-        juce::String secondsStr = juce::String(seconds).paddedLeft('0', 2);
-        return juce::String(minutes) + ":" + secondsStr;
-        };
-    trackSlider.valueFromTextFunction = [](const juce::String& text) { //changing the M:SS to the value
-        int colonPos = text.indexOf(":");
-        if (colonPos != -1) {
-            juce::String minutesStr = text.substring(0, colonPos);
-            juce::String secondsStr = text.substring(colonPos + 1);
-            return minutesStr.getIntValue() * 60.0 + secondsStr.getIntValue();
-        }
-        return text.getDoubleValue();
-        };
-    trackSlider.setRange(0.0, playerAudio.getLength());
-    trackSlider.setValue(0.0);
+        // loadButton
+        loadButton.addListener(this);
+        loadButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black.withAlpha(0.3f));
+        loadButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
 
-    for (auto* sli : { &volumeSlider, &trackSlider, &segmentSlider, &speedSlider}) //sliders
-    {
-        sli->addListener(this);
-        addAndMakeVisible(sli);
-    }
+        addAndMakeVisible(loadButton);
 
-    addAndMakeVisible(speedLabel);
-    speedLabel.setText("Speed:", juce::dontSendNotification);
-    speedLabel.setJustificationType(juce::Justification::centredRight);
+        // addMarker
+        addMarker.addListener(this);
+        addMarker.setColour(juce::TextButton::buttonColourId, juce::Colours::black.withAlpha(0.3f));
+        addMarker.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
 
-    speedSlider.setRange(0.5, 2.0, 0.01); // From half-speed to double-speed
-    speedSlider.setValue(1.0);
-    speedSlider.setSkewFactorFromMidPoint(1.0); // Makes 1.0x the center of the slider
-    speedSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 50, 20);
-    speedSlider.textFromValueFunction = [](double value) { return juce::String(value, 2) + "x"; };
-    speedSlider.valueFromTextFunction = [](const juce::String& text) { return text.removeCharacters("x").getDoubleValue(); };
+        addAndMakeVisible(addMarker);
 
+        // funButton
+        funButton.addListener(this);
+        funButton.setColour(juce::TextButton::buttonOnColourId, juce::Colours::hotpink.withAlpha(0.5f));
+        funButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black.withAlpha(0.3f));
+        funButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
+        funButton.setColour(juce::TextButton::textColourOnId, juce::Colours::white);
 
-	segmentSlider.setSliderStyle(juce::Slider::TwoValueHorizontal);
-    segmentSlider.setRange(0.0, playerAudio.getLength());
-	segmentSlider.setMinValue(0.0);
-    segmentSlider.setMaxValue(playerAudio.getLength());
-	segmentSlider.setVisible(segmentButton.getToggleState());
-	playerAudio.setStart(0.0f);
-	playerAudio.setEnd(playerAudio.getEnd());
+        addAndMakeVisible(funButton);
 
-    // Set a reasonable default size
-    setSize(1000, 400);
-    setAudioChannels(0, 2);
-    startTimer(60);
-    juce::File lastFile = playerAudio.retrievelastfile();
-    if (lastFile.existsAsFile()) {
-        playlistFiles.add(lastFile);
-        updatePlaylistComboBox();
+        // segmentButton
+        segmentButton.addListener(this);
+        segmentButton.setColour(juce::TextButton::buttonOnColourId, juce::Colours::hotpink.withAlpha(0.5f));
+        segmentButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black.withAlpha(0.3f));
+        segmentButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
+        segmentButton.setColour(juce::TextButton::textColourOnId, juce::Colours::white);
 
-	    
+        addAndMakeVisible(segmentButton);
 
-		double lastPos = playerAudio.getLastPlayedPosition();
-        playTrackAtIndex(0);
-        playerAudio.setPosition(lastPos);
-        waveform.setCurrentPosition(lastPos);
+        // addTrackButton
+        addTrackButton.addListener(this);
+        addTrackButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black.withAlpha(0.3f));
+        addTrackButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
+
+        addAndMakeVisible(addTrackButton);
+
+        // removeTrackButton
+        removeTrackButton.addListener(this);
+        removeTrackButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black.withAlpha(0.3f));
+        removeTrackButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
+
+        addAndMakeVisible(removeTrackButton);
+
+        // playlist ComboBox
+        playlist.addListener(this);
+        playlist.setTextWhenNoChoicesAvailable("No Tracks in Playlist<3");
+        playlist.setTextWhenNothingSelected("Select a Track");
+
+        playlist.setColour(juce::ComboBox::backgroundColourId, juce::Colours::black.withAlpha(0.3f));
+        playlist.setColour(juce::ComboBox::textColourId, juce::Colours::white);
+        playlist.setColour(juce::ComboBox::outlineColourId, juce::Colours::white.withAlpha(0.5f));
+        playlist.setColour(juce::ComboBox::arrowColourId, juce::Colours::hotpink);
+        playlist.setColour(juce::ComboBox::buttonColourId, juce::Colours::transparentBlack);
+
+        addAndMakeVisible(playlist);
+        // trackLabel
+        trackLabel.setText(playerAudio.getCurrentTrackName(), juce::dontSendNotification);
+        trackLabel.setJustificationType(juce::Justification::centred);
+        trackLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+        trackLabel.setFont(juce::Font(30.0f, juce::Font::bold));
+
+        addAndMakeVisible(trackLabel);
+        // speedLabel
+        speedLabel.setText("Speed:", juce::dontSendNotification);
+        speedLabel.setJustificationType(juce::Justification::centredRight);
+
+        speedLabel.setColour(juce::Label::textColourId, juce::Colours::white.withAlpha(0.8f));
+
+        addAndMakeVisible(speedLabel);
+        // markerList ComboBox
+        markerList.addListener(this);
+        markerList.setTextWhenNoChoicesAvailable("No Markers Available<3");
+        markerList.setTextWhenNothingSelected("Select a Marker");
+
+        markerList.setColour(juce::ComboBox::backgroundColourId, juce::Colours::black.withAlpha(0.3f));
+        markerList.setColour(juce::ComboBox::textColourId, juce::Colours::white);
+        markerList.setColour(juce::ComboBox::outlineColourId, juce::Colours::white.withAlpha(0.5f));
+        markerList.setColour(juce::ComboBox::arrowColourId, juce::Colours::hotpink);
+        markerList.setColour(juce::ComboBox::buttonColourId, juce::Colours::transparentBlack);
         
-   }
+        addAndMakeVisible(markerList);
+        //Waveform
+        addAndMakeVisible(waveform);
+
+
+        // volumeSlider
+        volumeSlider.textFromValueFunction = [](double value) { // cahnging value to percentage
+            double percent = value * 100;
+            return juce::String((int)percent) + "%";
+            };
+        volumeSlider.valueFromTextFunction = [](const juce::String& text) { // changing percentage to value
+            int percentagePos = text.indexOf("%");
+            if (percentagePos != -1) {
+                juce::String percent = text.substring(0, percentagePos);
+                return percent.getDoubleValue() / 100.0;
+            }
+            return text.getDoubleValue() / 100.0;
+            };
+        volumeSlider.setRange(0.0, 1.0, 0.01);
+        volumeSlider.setValue(0.5);
+        volumeSlider.addListener(this);
+		volumeSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 40, 20);
+        
+        volumeSlider.setColour(juce::Slider::backgroundColourId, juce::Colours::black.withAlpha(0.3f));
+        volumeSlider.setColour(juce::Slider::trackColourId, juce::Colours::hotpink);
+        volumeSlider.setColour(juce::Slider::thumbColourId, juce::Colours::white);
+        volumeSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colours::white);
+        volumeSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colours::black.withAlpha(0.3f));
+        volumeSlider.setColour(juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
+
+        addAndMakeVisible(volumeSlider);
+
+        // trackSlider
+        trackSlider.textFromValueFunction = [](double value) { // changing the value to a M:SS
+            int totalSeconds = (int)value;
+            int minutes = totalSeconds / 60;
+            int seconds = totalSeconds % 60;
+            juce::String secondsStr = juce::String(seconds).paddedLeft('0', 2);
+            return juce::String(minutes) + ":" + secondsStr;
+            };
+        trackSlider.valueFromTextFunction = [](const juce::String& text) { // changing the M:SS to the value
+            int colonPos = text.indexOf(":");
+            if (colonPos != -1) {
+                juce::String minutesStr = text.substring(0, colonPos);
+                juce::String secondsStr = text.substring(colonPos + 1);
+                return minutesStr.getIntValue() * 60.0 + secondsStr.getIntValue();
+            }
+            return text.getDoubleValue();
+            };
+        trackSlider.setRange(0.0, playerAudio.getLength());
+        trackSlider.setValue(0.0);
+        trackSlider.setTextBoxStyle(juce::Slider::TextBoxAbove, false, 80, 20);
+        trackSlider.addListener(this);
+        
+        trackSlider.setColour(juce::Slider::backgroundColourId, juce::Colours::black.withAlpha(0.3f));
+        trackSlider.setColour(juce::Slider::trackColourId, juce::Colours::hotpink);
+        trackSlider.setColour(juce::Slider::thumbColourId, juce::Colours::white);
+        trackSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colours::white);
+        trackSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colours::transparentBlack);
+        trackSlider.setColour(juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
+        
+        addAndMakeVisible(trackSlider);
+
+        // speedSlider
+        speedSlider.setRange(0.5, 2.0, 0.01); // From half-speed to double-speed
+        speedSlider.setValue(1.0);
+        speedSlider.setSkewFactorFromMidPoint(1.0); // Makes 1.0x the center of the slider
+        speedSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 50, 20);
+        speedSlider.textFromValueFunction = [](double value) { return juce::String(value, 2) + "x"; };
+        speedSlider.valueFromTextFunction = [](const juce::String& text) { return text.removeCharacters("x").getDoubleValue(); };
+        speedSlider.addListener(this);
+        
+        speedSlider.setColour(juce::Slider::backgroundColourId, juce::Colours::black.withAlpha(0.3f));
+        speedSlider.setColour(juce::Slider::trackColourId, juce::Colours::hotpink);
+        speedSlider.setColour(juce::Slider::thumbColourId, juce::Colours::white);
+        speedSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colours::white);
+        speedSlider.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colours::black.withAlpha(0.3f));
+        speedSlider.setColour(juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
+
+        addAndMakeVisible(speedSlider);
+
+        // segmentSlider
+        segmentSlider.setSliderStyle(juce::Slider::TwoValueHorizontal);
+        segmentSlider.setRange(0.0, playerAudio.getLength());
+        segmentSlider.setMinValue(0.0);
+        segmentSlider.setMaxValue(playerAudio.getLength());
+        segmentSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+        playerAudio.setStart(0.0f);
+        playerAudio.setEnd(playerAudio.getEnd());
+        segmentSlider.addListener(this);
+        
+        segmentSlider.setColour(juce::Slider::backgroundColourId, juce::Colours::black.withAlpha(0.3f));
+        segmentSlider.setColour(juce::Slider::trackColourId, juce::Colours::hotpink.withAlpha(0.5f));
+        segmentSlider.setColour(juce::Slider::thumbColourId, juce::Colours::white);
+        
+        addAndMakeVisible(segmentSlider);
+        segmentSlider.setVisible(segmentButton.getToggleState());
+
+        setSize(1000, 400);
+        startTimer(60);
+
+        juce::File lastFile = playerAudio.retrievelastfile();
+        if (lastFile.existsAsFile()) {
+            playlistFiles.add(lastFile);
+            updatePlaylistComboBox();
+
+            double lastPos = playerAudio.getLastPlayedPosition();
+            playTrackAtIndex(0);
+            playerAudio.setPosition(lastPos);
+            waveform.setCurrentPosition(lastPos);
+            playerAudio.stop();
+            playPauseButton->setToggleState(false, juce::dontSendNotification);
+        }
 }
 
 PlayerGUI::~PlayerGUI()
 {
-    shutdownAudio();
     setLookAndFeel(nullptr);
 }
 
@@ -135,13 +276,13 @@ void PlayerGUI::paint(juce::Graphics& g)
 {
 
     float rms = playerAudio.getRMS();
-    juce::Colour startColour = juce::Colours::purple;
-    juce::Colour endColour = juce::Colours::hotpink;
+    juce::Colour startColour = juce::Colours::black;
+    juce::Colour endColour = juce::Colour(0xff2d0041);
     juce::Colour highlighter = juce::Colours::black;
     juce::Colour NewstartColour = startColour;
     juce::Colour NEWendColour = endColour;
 
-    if (playerAudio.getFunState())
+    if (playerAudio.getFunState() && playerAudio.IsPlaying())
     {
         auto& random = juce::Random:: getSystemRandom();
         NewstartColour = juce::Colour::fromHSV(random.nextFloat(), 1.0f, 1.0f, 1.0f);
@@ -166,139 +307,130 @@ void PlayerGUI::paint(juce::Graphics& g)
 
 void PlayerGUI::resized()
 {
-    auto bounds = getLocalBounds();
-    int windowWidth = bounds.getWidth();
-    int windowHeight = bounds.getHeight();
-
-    
     const int margin = 15;
     const int spacing = 10;
-    const int buttonHeight = 40;
-    const int smallButtonWidth = 80;
-    const int sliderHeight = 20;
-    const int comboBoxHeight = 30;
-    const int rightClusterWidth = 220; 
 
+	auto bounds = getLocalBounds().reduced(margin);
 
-    int currentY = margin;
-    int rightX = windowWidth - margin - rightClusterWidth;
+    int rowHeight = 30;
+    int buttonWidth = 90;
+    int sliderHeight = 20;
 
-    currentY += buttonHeight + spacing;
-    addMarker.setBounds(rightX, currentY, rightClusterWidth, buttonHeight);
-    currentY += buttonHeight + spacing;
-    markerList.setBounds(rightX, currentY, rightClusterWidth, comboBoxHeight);
+	//Header
+	auto headerRow = bounds.removeFromTop(rowHeight);
 
+    int markerAreaWidth = 100 + spacing + 150;
+    auto markerArea = headerRow.removeFromRight(markerAreaWidth);
 
-	currentY += comboBoxHeight + spacing * 2;
-	playlist.setBounds(rightX, currentY, rightClusterWidth, comboBoxHeight);
-	currentY += comboBoxHeight + spacing;
+	headerRow.removeFromRight(spacing * 2);
 
-	int halfWidth = (rightClusterWidth - spacing) / 2;
-	addTrackButton.setBounds(rightX, currentY, halfWidth, buttonHeight);
-	removeTrackButton.setBounds(rightX + halfWidth + spacing, currentY, halfWidth, buttonHeight);
-	currentY += buttonHeight + spacing;
+    addMarker.setBounds(markerArea.removeFromLeft(buttonWidth));
+	markerArea.removeFromLeft(spacing);
+	markerList.setBounds(markerArea);
 
-	previousTrackButton.setBounds(rightX, currentY, halfWidth, buttonHeight);
-	nextTrackButton.setBounds(rightX + halfWidth + spacing, currentY, halfWidth, buttonHeight);
+	loadButton.setBounds(headerRow.removeFromLeft(buttonWidth));
+	headerRow.removeFromLeft(spacing);
+	addTrackButton.setBounds(headerRow.removeFromLeft(buttonWidth));
+	headerRow.removeFromLeft(spacing);
+	removeTrackButton.setBounds(headerRow.removeFromLeft(buttonWidth));
+	headerRow.removeFromLeft(spacing);
+	playlist.setBounds(headerRow);
 
-    const int trackLabelHeight = 30;
-    trackLabel.setBounds(margin, margin, rightX - margin - spacing, trackLabelHeight);
-
-    int waveformY = margin + trackLabelHeight + spacing;
-    int waveformHeight = windowHeight/4;
-    waveform.setBounds(margin,
-        waveformY,
-        rightX - margin - spacing,
-        waveformHeight);
-
-   
-    int bottomRowY = windowHeight - margin - buttonHeight;
-
+	bounds.removeFromTop(spacing * 2);
     
-    const int volumeSliderWidth = 150;
+    //Body
+	trackLabel.setBounds(bounds.removeFromTop(rowHeight));
+	bounds.removeFromTop(spacing);
     
-    int volumeSliderY = bottomRowY + (buttonHeight - sliderHeight) / 2;
-    volumeSlider.setBounds(margin, volumeSliderY, volumeSliderWidth, sliderHeight);
+	int waveformHeight = 120;
 
-   
-    int mainAreaRightEdge = rightX - spacing;
+	waveform.setBounds(bounds.removeFromTop(waveformHeight));
+	bounds.removeFromTop(spacing * 2);
 
-    int currentX = mainAreaRightEdge - smallButtonWidth;
-    repeatButton.setBounds(currentX, bottomRowY, smallButtonWidth, buttonHeight);
+    int textBoxHeight = 20;
+	trackSlider.setBounds(bounds.removeFromTop(sliderHeight + textBoxHeight));
+	bounds.removeFromTop(spacing / 2);
 
-    currentX -= (smallButtonWidth + spacing);
-    muteButton.setBounds(currentX, bottomRowY, smallButtonWidth, buttonHeight);
+	segmentSlider.setBounds(bounds.removeFromTop(sliderHeight));
 
-	currentX -= (smallButtonWidth + spacing);
-	segmentButton.setBounds(currentX, bottomRowY, smallButtonWidth, buttonHeight);
+	int sliderAreaCenterX = bounds.getCentreX();
 
+    //Footer
+	bounds.removeFromTop(spacing * 2);
+	int footerRowHeight = 40;
+	auto footerBounds = bounds.removeFromTop(footerRowHeight);
 
-    currentX -= (smallButtonWidth + spacing);;
-    funButton.setBounds(currentX, bottomRowY, smallButtonWidth, buttonHeight);
+	// center buttons in the footer
+    int playBtnWidth = 50;
+    int transportBtnWidth = 40;
 
-    int transportAreaX = margin + volumeSliderWidth + spacing;
-    int transportAreaWidth = currentX - spacing - transportAreaX;
+	int playBtnX = sliderAreaCenterX - (playBtnWidth / 2);
+	playPauseButton->setBounds(playBtnX, footerBounds.getY(), playBtnWidth, footerRowHeight);
 
-    std::vector<juce::Button*> orderedButtons = {
-        &loadButton,
-        &restartButton,
-        &jumpBackward,
-        &playButton,
-        &jumpForward,
-        &endButton,
-        &stopButton,
-    };
+	int replayBtnX = playBtnX - transportBtnWidth - spacing;
+	replayButton->setBounds(replayBtnX, footerBounds.getY(), transportBtnWidth, footerRowHeight);
 
-    int numButtons = (int)orderedButtons.size();
-    if (numButtons > 0)
-    {
-      
-        int buttonWidth = (transportAreaWidth - (spacing * (numButtons - 1))) / numButtons;
+	int prevBtnX = replayBtnX - transportBtnWidth - spacing;
+	prevButton->setBounds(prevBtnX, footerBounds.getY(), transportBtnWidth, footerRowHeight);
 
-        const int maxButtonWidth = 100;
-        int transportX = transportAreaX;
+	int forwardBtnX = playBtnX + transportBtnWidth + spacing;
+	forwardButton->setBounds(forwardBtnX, footerBounds.getY(), transportBtnWidth, footerRowHeight);
 
-        if (buttonWidth > maxButtonWidth)
-        {
-            buttonWidth = maxButtonWidth;
-            int totalWidth = (numButtons * buttonWidth) + ((numButtons - 1) * spacing);
-            transportX = transportAreaX + (transportAreaWidth - totalWidth) / 2;
-        }
+	int nextBtnX = forwardBtnX + transportBtnWidth + spacing;
+	nextButton->setBounds(nextBtnX, footerBounds.getY(), transportBtnWidth, footerRowHeight);
 
-        for (auto* btn : orderedButtons)
-        {
-            btn->setBounds(transportX, bottomRowY, buttonWidth, buttonHeight);
-            transportX += buttonWidth + spacing;
-        }
-    }
+	int centerGroupStartX = prevBtnX;
+	int centerGroupEndX = nextBtnX + transportBtnWidth;
+    juce::FlexBox leftSettingsGroup;
+	leftSettingsGroup.flexDirection = juce::FlexBox::Direction::row;
+	leftSettingsGroup.alignItems = juce::FlexBox::AlignItems::center;
 
-    int sliderY = bottomRowY - spacing - sliderHeight;
-    int sliderWidth = mainAreaRightEdge - margin; 
-    int speedSliderY = sliderY - sliderHeight - spacing - margin * 2;
-	int speedLabelWidth = 60;
-    speedLabel.setBounds(margin, speedSliderY, speedLabelWidth, sliderHeight);
-    speedSlider.setBounds(margin + speedLabelWidth + spacing, speedSliderY, sliderWidth - speedLabelWidth - spacing, sliderHeight);
+    leftSettingsGroup.items.add(juce::FlexItem(speedLabel)
+        .withWidth(70)
+        .withHeight(30)
+        .withMargin(juce::FlexItem::Margin(0, 0, 0, spacing)));
+	leftSettingsGroup.items.add(juce::FlexItem(speedSlider)
+        .withFlex(1.0)
+        .withMinWidth(80.0f)
+		.withHeight(sliderHeight)
+		.withMargin(juce::FlexItem::Margin(0, spacing, 0, 0)));
+    leftSettingsGroup.items.add(juce::FlexItem(*muteButton)
+        .withWidth(35)
+        .withHeight(35)
+		.withMargin(juce::FlexItem::Margin(0, spacing, 0, 0)));
+    leftSettingsGroup.items.add(juce::FlexItem(volumeSlider)
+        .withFlex(1.0)
+		.withMinWidth(80.0f)
+		.withHeight(sliderHeight)
+		);
+    int leftGroupX = footerBounds.getX();
+	int leftGroupEndX = centerGroupStartX - spacing * 2;
+	int leftGroupWidth = leftGroupEndX - leftGroupX;
+    auto leftBound = footerBounds.withX(leftGroupX)
+        .withWidth(leftGroupWidth);
+    leftSettingsGroup.performLayout(leftBound.toFloat());
 
-    trackSlider.setBounds(margin, sliderY, sliderWidth, sliderHeight);
+	juce::FlexBox rightSettingsGroup;
+	rightSettingsGroup.flexDirection = juce::FlexBox::Direction::row;
+	rightSettingsGroup.alignItems = juce::FlexBox::AlignItems::center;
+	rightSettingsGroup.justifyContent = juce::FlexBox::JustifyContent::center;
 
-	int sliderY2 = sliderY - spacing - sliderHeight;
-    segmentSlider.setBounds(margin, sliderY2, sliderWidth, sliderHeight);
-}
-
-
-void PlayerGUI::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
-{
-    playerAudio.prepareToPlay(samplesPerBlockExpected, sampleRate);
-}
-
-void PlayerGUI::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
-{
-    playerAudio.getNextAudioBlock(bufferToFill);
-}
-
-void PlayerGUI::releaseResources()
-{
-    playerAudio.releaseResources();
+    rightSettingsGroup.items.add(juce::FlexItem(*repeatButton)
+        .withWidth(35)
+        .withHeight(35)
+        .withMargin(juce::FlexItem::Margin(0, spacing, 0, 0)));
+    rightSettingsGroup.items.add(juce::FlexItem(segmentButton)
+        .withWidth(80)
+        .withHeight(30)
+		.withMargin(juce::FlexItem::Margin(0, spacing, 0, 0)));
+    rightSettingsGroup.items.add(juce::FlexItem(funButton)
+        .withWidth(80)
+        .withHeight(30));
+	int rightGroupX = centerGroupEndX + spacing;
+	int rightGroupWidth = footerBounds.getRight() - rightGroupX;
+    auto rightBound = footerBounds.withX(rightGroupX)
+        .withWidth(rightGroupWidth);
+	rightSettingsGroup.performLayout(rightBound.toFloat());
 }
 
 void PlayerGUI::buttonClicked(juce::Button* button)
@@ -335,47 +467,37 @@ void PlayerGUI::buttonClicked(juce::Button* button)
             });
     }
 
-    if (button == &restartButton)
+    if(button == playPauseButton.get())
     {
-        playerAudio.Jumptostart();
-        playerAudio.play();
-		isPlaying = true;
-    }
+        if (playPauseButton->getToggleState()) {
+            playerAudio.play();
+            isPlaying = true;
+        }
+        else {
+			playerAudio.stop();
+            isPlaying = false;
+        }
+	}
 
-    if (button == &stopButton)
-    {
-        playerAudio.stop(); 
-		isPlaying = false;
-    }
-
-    if (button == &jumpForward) {
+    if (button == forwardButton.get()) {
         playerAudio.plus10(playerAudio.getPosition());
     }
 
-    if (button == &jumpBackward) {
+    if (button == replayButton.get()) {
         playerAudio.minus10(playerAudio.getPosition());
     }
 
-    if (button == &repeatButton)
+    if (button == repeatButton.get())
     {
-        playerAudio.repeatToggle(repeatButton.getToggleState());
+        playerAudio.repeatToggle(repeatButton->getToggleState());
     }
+
     if (button == &funButton) {
         playerAudio.funToggle(funButton.getToggleState());
     }
 
-    if (button == &endButton)
-    {
-        playerAudio.Jumptoend();
-    }
-    if (button == &playButton)
-    {
-        playerAudio.play();
-		isPlaying = true;
-    }
-
-    if (button == &muteButton) {
-        playerAudio.mute(muteButton.getToggleState());
+    if (button == muteButton.get()) {
+        playerAudio.mute(muteButton->getToggleState());
     }
 
     if (button == &addMarker) {
@@ -400,19 +522,26 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 		removeSelectedTrack();
     }
     
-    if (button == &nextTrackButton) {
+    if (button == nextButton.get()) {
 		playNextTrack();
     }
 
-    if (button == &previousTrackButton) {
-		playPreviousTrack();
+    if (button == prevButton.get()) {
+        if(playerAudio.getPosition() < 1.0) {
+            playPreviousTrack();
+        }
+        else {
+            playerAudio.Jumptostart();
+            playerAudio.play();
+            isPlaying = true;
+        }
     }
 }
 
 void PlayerGUI::sliderValueChanged(juce::Slider* slider)
 {
     if (slider == &volumeSlider)
-        playerAudio.setGain((float)slider->getValue());
+        playerAudio.setGainMute((float)slider->getValue());
 
     if (slider == &trackSlider)
     {
@@ -443,6 +572,7 @@ void PlayerGUI::timerCallback()
             playerAudio.segmentPlayCheck();
         }
         trackSlider.setValue(playerAudio.getPosition(), juce::dontSendNotification);
+		playPauseButton->setToggleState(playerAudio.IsPlaying(), juce::dontSendNotification);
     }
 
     //waveform updater
@@ -450,7 +580,7 @@ void PlayerGUI::timerCallback()
     
     
     //playlist
-    if (isPlaying && !repeatButton.getToggleState()) {
+    if (isPlaying && !repeatButton->getToggleState()) {
 		double length = playerAudio.getLength();
         if (length > 0 && playerAudio.getPosition() >= length) {
 			playNextTrack();

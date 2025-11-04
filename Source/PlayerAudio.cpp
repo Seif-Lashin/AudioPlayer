@@ -7,33 +7,20 @@
 // edited this part to take properties file
 
 
-PlayerAudio::PlayerAudio() : thumbnailCache(5) // only saves the waveform of the last 5 files
+PlayerAudio::PlayerAudio(juce::PropertiesFile& his) : history(his), thumbnailCache(5) // only saves the waveform of the last 5 files
 {
     formatManager.registerBasicFormats();
 
-	resamplingSource = std::make_unique<juce::ResamplingAudioSource>(&transportSource, false);
+    resamplingSource = std::make_unique<juce::ResamplingAudioSource>(&transportSource, false);
 
-    // preparing the system file
-    juce::PropertiesFile::Options options;
-    options.applicationName = "Simple Audio Player";
-    options.filenameSuffix = "settings";
-    options.osxLibrarySubFolder = "Application Support";
-    options.storageFormat = juce::PropertiesFile::storeAsXML;
-    options.millisecondsBeforeSaving = 0;
-
-    // getter for file path
-    juce::File settingsfile = options.getDefaultFile();
-
-    //creating the PropertiesFile object and store it in our pointer
-    history = std::make_unique<juce::PropertiesFile>(settingsfile, options); 
-	currentTrackName = "No Track Loaded";
+    currentTrackName = "No Track Loaded";
 }
 
 PlayerAudio::~PlayerAudio() {
     // Saving Position if user exists
-    if (getLength() > 0.0 && history != nullptr) {
-        history->setValue(key_lastPosition, getPosition());   // saving the current position
-        history->saveIfNeeded();                              // forcesave
+    if (getLength() > 0.0) {
+        history.setValue(key_lastPosition, getPosition());   // saving the current position
+        history.saveIfNeeded();                              // forcesave
     }
 
     transportSource.stop();
@@ -50,6 +37,8 @@ void PlayerAudio::prepareToPlay(int samplesPerBlockExpected, double sampleRate) 
 void PlayerAudio::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) {
     resamplingSource->getNextAudioBlock(bufferToFill);
 
+	float combinedGain = trackGain * mixerGain * (!ismuted);
+	bufferToFill.buffer->applyGain(bufferToFill.startSample, bufferToFill.numSamples, combinedGain);
     float rms = 0.0f;
     int cntChannels = bufferToFill.buffer->getNumChannels();
     for (int channel = 0; channel < cntChannels; ++channel) {
@@ -82,8 +71,8 @@ void PlayerAudio::loadFile(const juce::File& file) {
 
             
               // clearing out the history
-              history->setValue(key_lastPosition, 0.0);
-              history->saveIfNeeded();
+              history.setValue(key_lastPosition, 0.0);
+              history.saveIfNeeded();
             
             
 
@@ -111,9 +100,7 @@ void PlayerAudio::loadFile(const juce::File& file) {
 
             transportSource.setPosition(0.0); // ensuring it starts at 0.
           
-             transportSource.start();
-            
-            
+            transportSource.start();
         }
     }
 }
@@ -128,16 +115,25 @@ void PlayerAudio::stop() {
     transportSource.stop();
 }
 
+void PlayerAudio::setMixerGain(float gain) {
+    mixerGain = gain;
+}
+
+void PlayerAudio::setTrackGain(float gain) {
+    trackGain = gain;
+}
+
 void PlayerAudio::setGain(float gain) {
-    transportSource.setGain(gain);
+    setTrackGain(gain);
 }
 
 void PlayerAudio::setGainMute(float gain) {
     if (ismuted) {
         lastVolume = gain;
     }
-    else setGain(gain);
+    else setTrackGain(gain);
 }
+
 
 void PlayerAudio::setPosition(double pos) {
     transportSource.setPosition(pos);
@@ -215,7 +211,7 @@ void PlayerAudio::mute(bool shouldMute) {
 }
 
 juce::File PlayerAudio::retrievelastfile() {
-    juce::String lastfilepath = history->getValue(key, juce::String()); // getting the filepath from our history
+    juce::String lastfilepath = history.getValue(key, juce::String()); // getting the filepath from our history
     if (lastfilepath.isNotEmpty()) {       // if the path isn't empty
         juce::File lastFile(lastfilepath);// we get the file in it
         if(lastFile.existsAsFile())
@@ -227,20 +223,21 @@ juce::File PlayerAudio::retrievelastfile() {
 }
 
 double PlayerAudio::getLastPlayedPosition() {
-	return history->getDoubleValue(key_lastPosition, 0.0);
+	return history.getDoubleValue(key_lastPosition, 0.0);
 }
 
 void PlayerAudio::savecurrentfilepath(const juce::File& file) {
     juce::String filepath = file.getFullPathName();  // saving the current file path
 
-    history->setValue(key, filepath);     // putting the filepath in our history file.
-    history->saveIfNeeded();             // forcing the save.
+    history.setValue(key, filepath);     // putting the filepath in our history file.
+    history.saveIfNeeded();             // forcing the save.
 }
 
 void PlayerAudio::addPositionAsMarker() {
+    if (trackMarkers.size() == 20) return;
     double current = getPosition();
     for (double marker : trackMarkers) {
-        if (std::abs(marker - current) <= 0.01) {
+        if (std::abs(marker - current) < 1.0) {
             return;
         }
     }

@@ -8,7 +8,7 @@ private:
     juce::AudioFormatManager formatManager;
     juce::AudioThumbnailCache thumbnailCache;       // juce class that generates low-res waveforms
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
-    std::unique_ptr<juce::PropertiesFile>history; // playeraudio owns its own settings file
+    juce::PropertiesFile& history; // playeraudio owns its own settings file
     juce::AudioTransportSource transportSource;
     bool islooping = false;
     bool ismuted = false;
@@ -18,6 +18,8 @@ private:
     float lastVolume = 0.5;
     float start = 0.0;
     float end = 0.0;
+	float trackGain = 1.0f;
+	float mixerGain = 1.0f;
     std::vector<double> trackMarkers;
     juce::String currentTrackName;
     juce::String title;
@@ -32,7 +34,7 @@ private:
     double currentSampleRate = 0.0;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PlayerAudio)
 public:
-    PlayerAudio();
+    PlayerAudio(juce::PropertiesFile& his);
     ~PlayerAudio();
 
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
@@ -62,6 +64,9 @@ public:
 	void SegmentToggle(bool shouldSegment);
 	void segmentPlayCheck();
 	void setSegment(double Start, double End);
+    void setTrackGain(float gain);
+    void setMixerGain(float gain);
+
     juce::String getCurrentTrackName();
     //when a new file is loaded
     void savecurrentfilepath(const juce::File& file);

@@ -1,6 +1,5 @@
 #include <JuceHeader.h>
-#include "PlayerAudio.h"
-#include "PlayerGUI.h"
+#include "MainComponent.h"
 // Our application class
 class SimpleAudioPlayer : public juce::JUCEApplication
 {
@@ -37,8 +36,8 @@ private:
             setUsingNativeTitleBar(false);// not using operating system's title bar
             setOpaque(false);             // to make round corners , ##not done yet##
 
-            setContentOwned(new PlayerGUI(), true);
-            centreWithSize(1000, 500);
+            setContentOwned(new MainComponent(), true);
+            centreWithSize(1200, 800);
             setVisible(true);
         }
                 
