@@ -217,7 +217,7 @@ void PlayerGUI::paint(juce::Graphics& g)
     juce::Colour NewstartColour = startColour;
     juce::Colour NEWendColour = endColour;
 
-    if (playerAudio.getFunState())
+    if (playerAudio.getFunState() && playerAudio.IsPlaying())
     {
         auto& random = juce::Random:: getSystemRandom();
         NewstartColour = juce::Colour::fromHSV(random.nextFloat(), 1.0f, 1.0f, 1.0f);
