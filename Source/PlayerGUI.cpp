@@ -146,6 +146,7 @@ PlayerGUI::PlayerGUI() : waveform(playerAudio.getFormatManager(), playerAudio.ge
         };
     trackSlider.setRange(0.0, playerAudio.getLength());
     trackSlider.setValue(0.0);
+    trackSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
 
     for (auto* sli : { &volumeSlider, &trackSlider, &segmentSlider, &speedSlider}) //sliders
     {
@@ -170,6 +171,7 @@ PlayerGUI::PlayerGUI() : waveform(playerAudio.getFormatManager(), playerAudio.ge
 	segmentSlider.setMinValue(0.0);
     segmentSlider.setMaxValue(playerAudio.getLength());
 	segmentSlider.setVisible(segmentButton.getToggleState());
+	segmentSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
 	playerAudio.setStart(0.0f);
 	playerAudio.setEnd(playerAudio.getEnd());
 
@@ -344,7 +346,7 @@ void PlayerGUI::resized()
     trackSlider.setBounds(margin, sliderY, sliderWidth, sliderHeight);
 
 	int sliderY2 = sliderY - spacing - sliderHeight;
-    segmentSlider.setBounds(margin, sliderY2, sliderWidth, sliderHeight);
+    segmentSlider.setBounds(margin, sliderY2, sliderWidth - 80, sliderHeight);
 }
 
 
