@@ -17,6 +17,8 @@
       <FILE id="IFOovM" name="MainComponent.cpp" compile="1" resource="0"
             file="Source/MainComponent.cpp"/>
     </GROUP>
+    <FILE id="eWz9g0" name="WaveForm.cpp" compile="1" resource="0" file="Source/WaveForm.cpp"/>
+    <FILE id="F1tJH6" name="WaveForm.h" compile="0" resource="0" file="Source/WaveForm.h"/>
   </MAINGROUP>
   <MODULES>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>

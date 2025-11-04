@@ -1,10 +1,12 @@
 #pragma once
 #include <JuceHeader.h>
+#include "WaveForm.h"
 #include <vector>
 
 class PlayerAudio : public juce::AudioSource{
 private:
     juce::AudioFormatManager formatManager;
+    juce::AudioThumbnailCache thumbnailCache;       // juce class that generates low-res waveforms
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
     std::unique_ptr<juce::PropertiesFile>history; // playeraudio owns its own settings file
     juce::AudioTransportSource transportSource;
@@ -82,4 +84,8 @@ public:
     float getRMS() const { return currentRMS.load(); };
     bool IsPlaying()const;
     void setSpeed(double ratio);
+
+    
+    juce::AudioFormatManager& getFormatManager();
+    juce::AudioThumbnailCache& getThumbnailCache();
 };

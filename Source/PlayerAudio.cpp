@@ -7,7 +7,7 @@
 // edited this part to take properties file
 
 
-PlayerAudio::PlayerAudio()
+PlayerAudio::PlayerAudio() : thumbnailCache(5) // only saves the waveform of the last 5 files
 {
     formatManager.registerBasicFormats();
 
@@ -80,9 +80,12 @@ void PlayerAudio::loadFile(const juce::File& file) {
             //metadata extraction using taglib
             getMetadata(file);
 
-            // clearing out the history
-            history->setValue(key_lastPosition, 0.0);
-            history->saveIfNeeded();
+            
+              // clearing out the history
+              history->setValue(key_lastPosition, 0.0);
+              history->saveIfNeeded();
+            
+            
 
 
             transportSource.stop();
@@ -95,10 +98,9 @@ void PlayerAudio::loadFile(const juce::File& file) {
             //repeat
             readerSource->setLooping(islooping); //keep track of state when loading new track
 
-
             start = 0;
             end = getLength();
-            //mute
+            
             
             // Attach safely
             transportSource.setSource(readerSource.get(),
@@ -108,7 +110,10 @@ void PlayerAudio::loadFile(const juce::File& file) {
 
 
             transportSource.setPosition(0.0); // ensuring it starts at 0.
-            transportSource.start();
+          
+             transportSource.start();
+            
+            
         }
     }
 }
@@ -371,3 +376,13 @@ void PlayerAudio::setSpeed(double ratio) {
         resamplingSource->setResamplingRatio(ratio);
     }
 }
+
+juce::AudioFormatManager& PlayerAudio::getFormatManager()
+{
+    return formatManager;
+}
+
+juce::AudioThumbnailCache& PlayerAudio::getThumbnailCache() {
+    return thumbnailCache;
+}
+
