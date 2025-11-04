@@ -367,7 +367,6 @@ void PlayerGUI::resized()
     auto rightBound = footerBounds.withX(rightGroupX)
         .withWidth(rightGroupWidth);
 	rightSettingsGroup.performLayout(rightBound.toFloat());
-
 }
 
 
