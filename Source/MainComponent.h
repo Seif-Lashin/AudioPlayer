@@ -21,6 +21,9 @@ public:
     void sliderValueChanged(juce::Slider* slider) override;
 
 private:
+    std::unique_ptr<juce::PropertiesFile> historyA;
+    std::unique_ptr<juce::PropertiesFile> historyB;
+
     PlayerAudio playerA;
 	PlayerAudio playerB;
 
@@ -33,8 +36,6 @@ private:
 
 	juce::MixerAudioSource mixerSource;
 
-    std::unique_ptr<juce::PropertiesFile> historyA;
-    std::unique_ptr<juce::PropertiesFile> historyB;
 	std::unique_ptr<juce::PropertiesFile> historySetup(juce::String name);
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };
