@@ -158,7 +158,7 @@ waveform(playerAudio.getFormatManager(), playerAudio.getThumbnailCache()) // to 
 
 
         // volumeSlider
-        volumeSlider.textFromValueFunction = [](double value) { // cahnging value to percentage
+        volumeSlider.textFromValueFunction = [](double value) { // changing value to percentage
             double percent = value * 100;
             return juce::String((int)percent) + "%";
             };
