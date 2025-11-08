@@ -284,10 +284,16 @@ void PlayerGUI::paint(juce::Graphics& g)
 
     if (playerAudio.getFunState() && playerAudio.IsPlaying())
     {
-        auto& random = juce::Random:: getSystemRandom();
-        NewstartColour = juce::Colour::fromHSV(random.nextFloat(), 1.0f, 1.0f, 1.0f);
-        NEWendColour = juce::Colour::fromHSV(random.nextFloat(), 1.0f, 1.0f, 1.0f);
-        highlighter = juce::Colour::fromHSV(random.nextFloat(), 1.0f, 1.0f, 1.0f); //hue, sat, brightness
+        auto& random = juce::Random::getSystemRandom();
+
+      
+        float brightness = juce::jmap(rms, 0.0f, 0.7f, 0.4f, 1.0f);
+       
+
+        
+        NewstartColour = juce::Colour::fromHSV(random.nextFloat(), 1.0f, brightness, 1.0f);
+        NEWendColour = juce::Colour::fromHSV(random.nextFloat(), 1.0f, brightness, 1.0f);
+        highlighter = juce::Colour::fromHSV(random.nextFloat(), 1.0f, brightness, 1.0f); //hue, sat, brightness
     }
 
     

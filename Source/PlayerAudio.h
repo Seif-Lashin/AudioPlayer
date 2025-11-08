@@ -18,7 +18,7 @@ private:
     float lastVolume = 0.5;
     float start = 0.0;
     float end = 0.0;
-	float trackGain = 1.0f;
+	float trackGain = 1.0f;                 // used for audio processing
 	float mixerGain = 1.0f;
     std::vector<double> trackMarkers;
     juce::String currentTrackName;
