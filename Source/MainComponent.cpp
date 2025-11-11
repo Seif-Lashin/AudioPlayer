@@ -139,17 +139,16 @@ void MainComponent::sliderValueChanged(juce::Slider* slider)
     }
 }
 
-// Implement the button click handler
+
 void MainComponent::buttonClicked(juce::Button* button)
 {
     if (button == &modeToggleButton)
     {
-        // Flip the mode
+        
         isSinglePlayerMode = !isSinglePlayerMode;
 
         if (isSinglePlayerMode)
         {
-            // Now in Single Player Mode
             modeToggleButton.setButtonText("Switch to Mixer Mode");
             guiB.setVisible(false);
             mixerSlider.setVisible(false);
@@ -158,7 +157,6 @@ void MainComponent::buttonClicked(juce::Button* button)
         }
         else
         {
-            // Now in Mixer Mode
             modeToggleButton.setButtonText("Switch to Single Player");
             guiB.setVisible(true);
             mixerSlider.setVisible(true);
@@ -166,9 +164,8 @@ void MainComponent::buttonClicked(juce::Button* button)
             labelB.setVisible(true);
         }
 
-        // Trigger a layout update
+        
         resized();
-        // Repaint to fix the mixer background
         repaint();
     }
 }

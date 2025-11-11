@@ -307,113 +307,123 @@ void PlayerGUI::paint(juce::Graphics& g)
 
 void PlayerGUI::resized()
 {
+    // --- START OF EDITED SECTION ---
+
     const int margin = 15;
     const int spacing = 10;
 
-	auto bounds = getLocalBounds().reduced(margin);
+    auto bounds = getLocalBounds().reduced(margin);
 
     int rowHeight = 30;
     int buttonWidth = 90;
     int sliderHeight = 20;
 
-	//Header
-	auto headerRow = bounds.removeFromTop(rowHeight);
+    // === 1. HEADER ===
+    // This stays at the top
+    auto headerRow = bounds.removeFromTop(rowHeight);
 
     int markerAreaWidth = 100 + spacing + 150;
     auto markerArea = headerRow.removeFromRight(markerAreaWidth);
 
-	headerRow.removeFromRight(spacing * 2);
+    headerRow.removeFromRight(spacing * 2);
 
     addMarker.setBounds(markerArea.removeFromLeft(buttonWidth));
-	markerArea.removeFromLeft(spacing);
-	markerList.setBounds(markerArea);
+    markerArea.removeFromLeft(spacing);
+    markerList.setBounds(markerArea);
 
-	loadButton.setBounds(headerRow.removeFromLeft(buttonWidth));
-	headerRow.removeFromLeft(spacing);
-	addTrackButton.setBounds(headerRow.removeFromLeft(buttonWidth));
-	headerRow.removeFromLeft(spacing);
-	removeTrackButton.setBounds(headerRow.removeFromLeft(buttonWidth));
-	headerRow.removeFromLeft(spacing);
-	playlist.setBounds(headerRow);
+    loadButton.setBounds(headerRow.removeFromLeft(buttonWidth));
+    headerRow.removeFromLeft(spacing);
+    addTrackButton.setBounds(headerRow.removeFromLeft(buttonWidth));
+    headerRow.removeFromLeft(spacing);
+    removeTrackButton.setBounds(headerRow.removeFromLeft(buttonWidth));
+    headerRow.removeFromLeft(spacing);
+    playlist.setBounds(headerRow);
 
-	bounds.removeFromTop(spacing * 2);
-    
-    //Body
-	trackLabel.setBounds(bounds.removeFromTop(rowHeight));
-	bounds.removeFromTop(spacing);
-    
-	int waveformHeight = 120;
+    bounds.removeFromTop(spacing * 2); // Space after header
 
-	waveform.setBounds(bounds.removeFromTop(waveformHeight));
-	bounds.removeFromTop(spacing * 2);
-
+    // === 2. FOOTER ===
+    // We create this from the BOTTOM now
     int textBoxHeight = 20;
-	trackSlider.setBounds(bounds.removeFromTop(sliderHeight + textBoxHeight));
-	bounds.removeFromTop(spacing / 2);
+    int transportRowHeight = 40;
+    // Calculate total height needed for the footer area
+    int footerTotalHeight = (sliderHeight + textBoxHeight) + // trackSlider
+        (sliderHeight)+                // segmentSlider
+        (transportRowHeight)+          // transport buttons
+        (spacing * 3);                  // spacing between them
 
-	segmentSlider.setBounds(bounds.removeFromTop(sliderHeight));
+    auto footerArea = bounds.removeFromBottom(footerTotalHeight);
 
-	int sliderAreaCenterX = bounds.getCentreX();
+    // Now layout the footer area from its top
+    trackSlider.setBounds(footerArea.removeFromTop(sliderHeight + textBoxHeight));
+    footerArea.removeFromTop(spacing / 2);
+    segmentSlider.setBounds(footerArea.removeFromTop(sliderHeight));
+    footerArea.removeFromTop(spacing * 2);
 
-    //Footer
-	bounds.removeFromTop(spacing * 2);
-	int footerRowHeight = 40;
-	auto footerBounds = bounds.removeFromTop(footerRowHeight);
+    // The remaining part of footerArea is for transport controls
+    auto transportBounds = footerArea;
+    int sliderAreaCenterX = transportBounds.getCentreX();
 
-	// center buttons in the footer
+    // center buttons in the transportBounds
     int playBtnWidth = 50;
     int transportBtnWidth = 40;
 
-	int playBtnX = sliderAreaCenterX - (playBtnWidth / 2);
-	playPauseButton->setBounds(playBtnX, footerBounds.getY(), playBtnWidth, footerRowHeight);
+    int playBtnX = sliderAreaCenterX - (playBtnWidth / 2);
+    playPauseButton->setBounds(playBtnX, transportBounds.getY(), playBtnWidth, transportRowHeight);
 
-	int replayBtnX = playBtnX - transportBtnWidth - spacing;
-	replayButton->setBounds(replayBtnX, footerBounds.getY(), transportBtnWidth, footerRowHeight);
+    int replayBtnX = playBtnX - transportBtnWidth - spacing;
+    replayButton->setBounds(replayBtnX, transportBounds.getY(), transportBtnWidth, transportRowHeight);
 
-	int prevBtnX = replayBtnX - transportBtnWidth - spacing;
-	prevButton->setBounds(prevBtnX, footerBounds.getY(), transportBtnWidth, footerRowHeight);
+    int prevBtnX = replayBtnX - transportBtnWidth - spacing;
+    prevButton->setBounds(prevBtnX, transportBounds.getY(), transportBtnWidth, transportRowHeight);
 
-	int forwardBtnX = playBtnX + transportBtnWidth + spacing;
-	forwardButton->setBounds(forwardBtnX, footerBounds.getY(), transportBtnWidth, footerRowHeight);
+    int forwardBtnX = playBtnX + transportBtnWidth + spacing;
+    forwardButton->setBounds(forwardBtnX, transportBounds.getY(), transportBtnWidth, transportRowHeight);
 
-	int nextBtnX = forwardBtnX + transportBtnWidth + spacing;
-	nextButton->setBounds(nextBtnX, footerBounds.getY(), transportBtnWidth, footerRowHeight);
+    int nextBtnX = forwardBtnX + transportBtnWidth + spacing;
+    nextButton->setBounds(nextBtnX, transportBounds.getY(), transportBtnWidth, transportRowHeight);
 
-	int centerGroupStartX = prevBtnX;
-	int centerGroupEndX = nextBtnX + transportBtnWidth;
+    int centerGroupStartX = prevBtnX;
+    int centerGroupEndX = nextBtnX + transportBtnWidth;
+
+    // Layout left settings group
     juce::FlexBox leftSettingsGroup;
-	leftSettingsGroup.flexDirection = juce::FlexBox::Direction::row;
-	leftSettingsGroup.alignItems = juce::FlexBox::AlignItems::center;
+    leftSettingsGroup.flexDirection = juce::FlexBox::Direction::row;
+    leftSettingsGroup.alignItems = juce::FlexBox::AlignItems::center;
 
     leftSettingsGroup.items.add(juce::FlexItem(speedLabel)
         .withWidth(70)
         .withHeight(30)
         .withMargin(juce::FlexItem::Margin(0, 0, 0, spacing)));
-	leftSettingsGroup.items.add(juce::FlexItem(speedSlider)
+    leftSettingsGroup.items.add(juce::FlexItem(speedSlider)
         .withFlex(1.0)
         .withMinWidth(80.0f)
-		.withHeight(sliderHeight)
-		.withMargin(juce::FlexItem::Margin(0, spacing, 0, 0)));
+        .withHeight(sliderHeight)
+        .withMargin(juce::FlexItem::Margin(0, spacing, 0, 0)));
     leftSettingsGroup.items.add(juce::FlexItem(*muteButton)
         .withWidth(35)
         .withHeight(35)
-		.withMargin(juce::FlexItem::Margin(0, spacing, 0, 0)));
+        .withMargin(juce::FlexItem::Margin(0, spacing, 0, 0)));
     leftSettingsGroup.items.add(juce::FlexItem(volumeSlider)
         .withFlex(1.0)
-		.withMinWidth(80.0f)
-		.withHeight(sliderHeight)
-		);
-    int leftGroupX = footerBounds.getX();
-	int leftGroupEndX = centerGroupStartX - spacing * 2;
-	int leftGroupWidth = leftGroupEndX - leftGroupX;
-    auto leftBound = footerBounds.withX(leftGroupX)
-        .withWidth(leftGroupWidth);
-    leftSettingsGroup.performLayout(leftBound.toFloat());
+        .withMinWidth(80.0f)
+        .withHeight(sliderHeight)
+    );
+    int leftGroupX = transportBounds.getX();
+    int leftGroupEndX = centerGroupStartX - spacing * 2;
+    int leftGroupWidth = leftGroupEndX - leftGroupX;
+    // Check if there is enough space before layout
+    if (leftGroupWidth > 0)
+    {
+        auto leftBound = transportBounds.withX(leftGroupX)
+            .withWidth(leftGroupWidth);
+        leftSettingsGroup.performLayout(leftBound.toFloat());
+    }
 
-	juce::FlexBox rightSettingsGroup;
-	rightSettingsGroup.flexDirection = juce::FlexBox::Direction::row;
-	rightSettingsGroup.alignItems = juce::FlexBox::AlignItems::center;
-	rightSettingsGroup.justifyContent = juce::FlexBox::JustifyContent::center;
+    // Layout right settings group
+    juce::FlexBox rightSettingsGroup;
+    rightSettingsGroup.flexDirection = juce::FlexBox::Direction::row;
+    rightSettingsGroup.alignItems = juce::FlexBox::AlignItems::center;
+    rightSettingsGroup.justifyContent = juce::FlexBox::JustifyContent::flexEnd; // Align to the right
 
     rightSettingsGroup.items.add(juce::FlexItem(*repeatButton)
         .withWidth(35)
@@ -422,15 +432,28 @@ void PlayerGUI::resized()
     rightSettingsGroup.items.add(juce::FlexItem(segmentButton)
         .withWidth(80)
         .withHeight(30)
-		.withMargin(juce::FlexItem::Margin(0, spacing, 0, 0)));
+        .withMargin(juce::FlexItem::Margin(0, spacing, 0, 0)));
     rightSettingsGroup.items.add(juce::FlexItem(funButton)
         .withWidth(80)
         .withHeight(30));
-	int rightGroupX = centerGroupEndX + spacing;
-	int rightGroupWidth = footerBounds.getRight() - rightGroupX;
-    auto rightBound = footerBounds.withX(rightGroupX)
-        .withWidth(rightGroupWidth);
-	rightSettingsGroup.performLayout(rightBound.toFloat());
+    int rightGroupX = centerGroupEndX + spacing * 2;
+    int rightGroupWidth = transportBounds.getRight() - rightGroupX;
+    // Check if there is enough space before layout
+    if (rightGroupWidth > 0)
+    {
+        auto rightBound = transportBounds.withX(rightGroupX)
+            .withWidth(rightGroupWidth);
+        rightSettingsGroup.performLayout(rightBound.toFloat());
+    }
+
+    // === 3. MIDDLE AREA ===
+    // 'bounds' is now everything left between header and footer
+    trackLabel.setBounds(bounds.removeFromTop(rowHeight));
+    bounds.removeFromTop(spacing);
+
+    waveform.setBounds(bounds); // Waveform gets ALL the remaining space
+
+    // --- END OF EDITED SECTION ---
 }
 
 void PlayerGUI::buttonClicked(juce::Button* button)
