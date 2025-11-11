@@ -5,7 +5,8 @@
 #include "PlayerGUI.h"
 
 class MainComponent : public juce::AudioAppComponent,
-    public juce::Slider::Listener
+    public juce::Slider::Listener,
+    public juce::Button::Listener  // <-- Add Button::Listener
 {
 public:
     MainComponent();
@@ -19,23 +20,27 @@ public:
     void resized() override;
 
     void sliderValueChanged(juce::Slider* slider) override;
+    void buttonClicked(juce::Button* button) override; // <-- Add buttonClicked declaration
 
 private:
     std::unique_ptr<juce::PropertiesFile> historyA;
     std::unique_ptr<juce::PropertiesFile> historyB;
 
     PlayerAudio playerA;
-	PlayerAudio playerB;
+    PlayerAudio playerB;
 
-	PlayerGUI guiA;
-	PlayerGUI guiB;
+    PlayerGUI guiA;
+    PlayerGUI guiB;
 
-	juce::Slider mixerSlider;
+    juce::Slider mixerSlider;
     juce::Label labelA;
-	juce::Label labelB;
+    juce::Label labelB;
 
-	juce::MixerAudioSource mixerSource;
+    juce::TextButton modeToggleButton; // <-- Add toggle button
+    bool isSinglePlayerMode = true;    // <-- Add state variable, default to true
 
-	std::unique_ptr<juce::PropertiesFile> historySetup(juce::String name);
+    juce::MixerAudioSource mixerSource;
+
+    std::unique_ptr<juce::PropertiesFile> historySetup(juce::String name);
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };
